@@ -1,0 +1,404 @@
+############################################################ station 10 / 6 / 8 scenery, strings, Bob's sprite
+L 9EE6 CANNON_WALLS
+H 9EE6
+| CANNON_WALLS - station 10: vertical 2-pixel walls (lines, y, x), 0 = end.
+D 9EE6 9EF1 byte 3
+L 9EF2 CANNON_SHAPE
+H 9EF2
+| CANNON_SHAPE - the cannon, 35 lines of (missile byte, player 3 byte): the four missiles
+| (as a "fifth player") form the left 8 pixels and player 3 the right 8. Read backwards, indexed
+| from 1 (CANNON_SHAPE,y with y = $46..1), so the pairs start at $9EF3 and $9EF2 is unused.
+D 9EF2 9EF2 byte
+D 9EF3 9F38 gfx 2
+L 9F39 SETUP_CANNON
+H 9F39
+| SETUP_CANNON - station 10 ("The Cannon"): put the cannon into player 3 + missiles at
+| x = $A1, write "TNT Charge=   0 Tons", and draw the TNT store (shelves, walls and its
+| "TNT" sign) and the cannon's track.
+C 9F39 cannon starts at x = $A1
+C 9F3B
+C 9F3D copy the shape, 35 lines, into P/M rows $B9-$DB
+C 9F3F
+L 9F41 SC_COPY
+C 9F41 player 3 byte
+C 9F44
+C 9F47
+C 9F48 missile byte
+C 9F4B
+C 9F4E
+C 9F4F
+C 9F50
+C 9F52 colour 1 for text and lines
+C 9F54
+C 9F56
+C 9F58 "TNT Charge=   0 Tons"
+C 9F5A
+C 9F5C
+C 9F5E
+C 9F60 at x = 0, y = 13, 20 characters
+C 9F62
+C 9F64
+C 9F66
+C 9F69 shelves of the TNT store: lines $59/$5A and $64/$65
+C 9F6B
+C 9F6D
+C 9F6F
+C 9F72
+C 9F74
+C 9F76
+C 9F78
+C 9F7B
+C 9F7D
+C 9F7F
+C 9F81
+C 9F84
+C 9F86
+C 9F88
+C 9F8A
+C 9F8D the store's walls from CANNON_WALLS
+L 9F8F SC_WALL
+C 9F8F
+C 9F91 lines (0 = end)
+C 9F94
+C 9F96
+C 9F98 y
+C 9F9B
+C 9F9D x
+C 9FA0
+L 9FA2 SC_WALL_LINE
+C 9FA2 2 pixels wide
+C 9FA5
+C 9FA7
+C 9FAA
+C 9FAC
+C 9FAE
+C 9FB0
+C 9FB2
+C 9FB4
+C 9FB5
+C 9FB6
+C 9FB7
+L 9FB9 SC_SIGN
+C 9FB9 colour 2 ...
+C 9FBB
+C 9FBD
+C 9FBF ... "TNT" (the first 3 characters of the same string)
+C 9FC1
+C 9FC3
+C 9FC5
+C 9FC7 at x = $10, y = $5C
+C 9FC9
+C 9FCB
+C 9FCD
+C 9FD0 the cannon's track starts at x = $40
+L 9FD2 DRAW_TRACK
+H 9FD2
+| DRAW_TRACK - rails on lines $BC/$BD from pixel x = A, 62 pixels long, plus sleepers
+| (2 pixels on, 2 off) on line $BE. Also used for the lift's track on station 8.
+C 9FD2
+C 9FD3
+C 9FD4
+C 9FD6
+C 9FD8
+C 9FDB
+C 9FDC
+C 9FDD
+C 9FDE
+C 9FE0
+C 9FE2
+C 9FE5 sleepers on line $BE
+C 9FE7
+C 9FE9
+C 9FEA
+C 9FEC 16 sleepers
+C 9FEE
+L 9FF0 DT_SLEEPER
+C 9FF0
+C 9FF3
+C 9FF5
+C 9FF8 4 pixels per sleeper
+C 9FFA
+C 9FFC
+C 9FFE
+C A000
+C A002
+L A003 DRAW_WASTE
+H A003
+| DRAW_WASTE - station 6 ("Radioactive Waste"): a solid box (lines $9E-$BE, x 20-139)
+| with 2-pixel edges in colour 2, and "DANGER / Radioactive / Waste" cut into it in the
+| background colour.
+C A003 colour 1
+C A005
+C A007 33 lines from $9E ...
+C A009
+C A00B
+L A00D DW_FILL
+C A00D ... each from x = 20, 120 pixels long
+C A00F
+C A011
+C A014
+C A016
+C A017
+C A019
+C A01B colour 2 edges at the x positions in WASTE_EDGES
+C A01D
+C A01F
+C A021
+L A023 DW_EDGE
+C A023
+C A025
+C A028
+C A02A
+C A02C
+C A02D
+C A02F 33 lines
+C A031
+C A033
+C A035
+L A037 DW_EDGE_LINE
+C A037
+C A03A
+C A03C
+C A03E
+C A040
+L A042 DW_TEXT
+C A042 text in the background colour (12)
+C A044
+C A046 string 0 of TEXT_POOL
+C A048
+C A04A normal height
+C A04C
+C A04E "DANGER" at ($38, $A2)
+C A050
+C A052
+C A054
+C A057 "Radioactive" at ($24, $AD)
+C A059
+C A05B
+C A05D
+C A060 "Waste" at ($3C, $B5)
+C A062
+C A064
+L A066 DRAW_STRING
+H A066
+| DRAW_STRING - draw A characters of TEXT_POOL, starting at TXT_IDX, at x = X, y = Y.
+| DRAW_STRING_Y is the same with TXT_X already set. Characters are 8 pixels apart;
+| TXT_IDX is left pointing after the string, so strings can be drawn one after another.
+C A066
+C A068
+L A06A DRAW_STRING_Y
+C A06A
+L A06C DSTR_LOOP
+C A06C next character
+C A06E
+C A071
+C A074 move right 8 pixels ...
+C A076
+C A077
+C A079
+C A07B ... and back up to the same top line (8 or 16 lines)
+C A07D
+C A07E
+C A080
+C A082
+C A083
+C A085
+L A087 DSTR_NEXT
+C A087
+C A089
+C A08B
+C A08D
+C A08F
+L A090 WASTE_EDGES
+D A090 A094 byte
+L A095 GET_BOB_FRAME
+H A095
+| GET_BOB_FRAME - SPR_PTR = address of Bob's animation frame BOB_FRAME.
+C A095
+C A097
+C A09A
+C A09C
+C A09F
+C A0A1
+L A0A2 DRAW_BOB
+H A0A2
+| DRAW_BOB - copy Bob's current frame into players 0, 1 and 2 at height BOB_Y.
+| Bob is three overlaid single-colour players, which gives him three colours (hat and
+| coat, face and hands, legs and boots ...). A frame holds the three layers back to back
+| (20, 17 and 17 lines) with neighbouring layers sharing a byte, 51 bytes in all. Copying
+| backwards with the extra blank lines at the ends also erases his previous position.
+C A0A2
+C A0A5 player 0: 20 lines, bottom at row BOB_Y + $32
+C A0A7
+C A0A8
+C A0AA
+C A0AB
+L A0AD DB_P0
+C A0AD
+C A0AF
+C A0B2
+C A0B3
+C A0B4
+C A0B6 next layer starts 19 bytes on
+C A0B8
+C A0BB player 1: 17 lines, bottom at row BOB_Y + $2F
+C A0BC
+C A0BD
+C A0BF
+C A0C0
+L A0C2 DB_P1
+C A0C2
+C A0C4
+C A0C7
+C A0C8
+C A0C9
+C A0CB player 2: 17 lines, bottom at row BOB_Y + $35
+C A0CC
+C A0CD
+C A0CF
+C A0D0
+C A0D2 next layer starts 16 bytes on
+C A0D4
+L A0D7 DB_P2
+C A0D7
+C A0D9
+C A0DC
+C A0DD
+C A0DE
+C A0E0
+L A0E1 SHOW_BOB
+H A0E1
+| SHOW_BOB - draw Bob (upside down once he has been fired from the cannon), and on
+| station 10 hide his legs while he stands inside the loaded cannon.
+C A0E1 fired from the cannon?
+C A0E3
+C A0E5
+L A0E8 HIDE_IN_CANNON
+C A0E8 station 10 only
+C A0EA
+C A0EC
+C A0EE already inside?
+C A0F0
+C A0F2 TNT loaded?
+C A0F4
+C A0F6 walking or standing?
+C A0F8
+C A0FA
+C A0FC level with the cannon's mouth ...
+C A0FE
+C A0FF
+C A101
+C A103
+C A105 ... and at its height?
+C A107
+C A109
+C A10B
+C A10D
+L A10F HIC_HIDE
+C A10F blank P/M rows $B9-$C3 of players 0-2 (the cannon covers him)
+C A111
+L A113 HIC_LOOP
+C A113
+C A116
+C A119
+C A11C
+C A11D
+L A11F HIC_RTS
+C A11F
+L A120 DRAW_BOB_FLIPPED
+H A120
+| DRAW_BOB_FLIPPED - as DRAW_BOB but copying forwards, so Bob is upside down (flying
+| out of the cannon head first). Blank lines are written at both ends.
+C A120
+C A123
+C A125
+C A126
+C A128
+C A129 3 blank lines above
+C A12B
+L A12D DBF_CLR0
+C A12D
+C A130
+C A131
+C A132
+C A134 then player 0's 20 lines, top to bottom
+L A136 DBF_P0
+C A136
+C A138
+C A13B
+C A13C
+C A13D
+C A13F
+C A141
+C A144 player 1
+C A145
+C A146
+C A148
+C A149 6 blank lines
+C A14B
+L A14D DBF_CLR1
+C A14D
+C A150
+C A151
+C A152
+C A154
+L A156 DBF_P1
+C A156
+C A158
+C A15B
+C A15C
+C A15D
+C A15F player 2
+C A160
+C A161
+C A163
+C A164
+C A166
+C A168
+L A16B DBF_P2
+C A16B
+C A16D
+C A170
+C A171
+C A172
+C A174 8 blank lines below
+C A176
+L A178 DBF_CLR2
+C A178
+C A17B
+C A17C
+C A17D
+C A17F
+L A182 SPARKLE_BOB
+H A182
+| SPARKLE_BOB - draw Bob, then AND every line of his three players with a random number,
+| so he appears as a cloud of flickering dots (transporter beam, death).
+C A182
+C A185 21 lines
+C A187
+C A189
+C A18B
+L A18D SB_LOOP
+C A18D
+C A190
+C A192
+C A195
+C A198
+C A19A
+C A19D
+C A1A0
+C A1A2
+C A1A5
+C A1A6
+C A1A8
+C A1AA
+L A1AB ADD_SPR_PTR
+H A1AB
+| ADD_SPR_PTR - SPR_PTR = SPR_PTR + A.
+C A1AB
+C A1AC
+C A1AE
+C A1B0
+C A1B2
+L A1B4 ASP_RTS
+C A1B4

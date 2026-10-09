@@ -1,0 +1,1011 @@
+############################################################ input, cannon, lift, the game's VBI
+L B971 READ_BUTTON
+H B971
+| READ_BUTTON - fire button into bit 0 of A (0 = pressed): TRIG0, or bit 4 of the
+| current demo input.
+C B971 demo?
+C B973
+C B975
+C B977
+C B979
+C B97B
+C B97D
+L B97E RB_DEMO
+C B97E
+C B981
+C B983
+C B984
+C B985
+C B986
+C B987
+L B988 READ_STICK
+H B988
+| READ_STICK - joystick in the PORTA format (bit 0 up, 1 down, 2 left, 3 right; 0 means
+| pushed), from the demo recording, PORTA (400/800) or the 5200's analog stick.
+| The 5200 stick is turned into the same four bits: below $30 or above $B4 on either
+| pot counts as pushed.
+C B988
+C B98A
+C B98C
+C B98E
+C B990 400/800: stick 0 is the low nibble of PORTA
+C B993
+L B994 RS_DEMO
+C B994
+C B997
+C B999
+L B99A RS_5200
+C B99A
+C B99C
+C B99E
+C B9A0 far right
+C B9A2
+C B9A4
+L B9A6 RS_LEFT
+C B9A6 far left
+C B9A8
+C B9AA
+L B9AC RS_Y
+C B9AC
+C B9AE far down
+C B9B0
+C B9B2
+L B9B4 RS_UP
+C B9B4 far up
+C B9B6
+C B9B8
+C B9BA
+L B9BD DEMO_INPUT
+C B9BD current byte of the recording
+C B9BF
+C B9C1
+L B9C3 RS_DONE
+C B9C3
+C B9C5
+L B9C6 CANNON
+H B9C6
+| CANNON - station 10, every frame.
+|   state 0: the cannon rolls back to its rest position ($A1). If Bob, carrying TNT, steps
+|            into its mouth he gets in (state 1).
+|   state 1: the cannon follows Bob as he walks; the button fires it (state 2).
+|   state 2: Bob flies up two lines a frame to a height set by the charge:
+|            1 ton $5D, 2 tons $33, 3 tons $09 (the three upper platforms), 4 or more
+|            and he is blown off the top of the screen (to $DF), turning upside down -
+|            hence the "DANGER" warning.
+C B9C6
+C B9C8
+C B9C9
+C B9CB
+C B9CC
+C B9CE state 0: roll back one pixel every 4 frames
+C B9D0
+C B9D2
+C B9D4
+C B9D6
+C B9D8
+C B9DA
+L B9DC CN_REST
+C B9DC Bob in the mouth (x = cannon + 4, y = $8F, on his feet)?
+C B9DE
+C B9DF
+C B9E1
+C B9E3
+C B9E5
+C B9E7
+C B9E9
+C B9EB
+C B9ED
+C B9EF
+C B9F1
+C B9F3
+C B9F5 only with TNT on board
+C B9F7
+C B9F9 in he goes: state 1
+C B9FB
+C B9FD
+L B9FF CN_EXIT
+C B9FF
+L BA02 CN_AIM
+C BA02 state 1: the cannon moves with Bob
+C BA04
+C BA05
+C BA07
+C BA09
+C BA0B
+C BA0D
+C BA0F
+C BA11 fire?
+C BA13
+C BA15
+C BA17 fire: state 2, jump frame
+C BA19
+C BA1B
+C BA1C
+C BA1E
+C BA20
+C BA22
+C BA24
+C BA26
+C BA28
+C BA2A
+C BA2C
+C BA2E
+L BA2F CN_FRAME
+C BA2F
+C BA31
+L BA33 CN_SOUND
+C BA33
+C BA34
+C BA35
+C BA37
+C BA39
+C BA3B
+C BA3D
+C BA3F
+C BA41
+L BA44 CN_FLY
+C BA44 state 2: up 2 lines per frame
+C BA46
+C BA48 target height from the charge
+C BA4A
+C BA4C
+C BA4E
+C BA4F
+C BA51
+C BA53
+C BA54
+C BA56
+C BA58
+C BA59
+C BA5B too much TNT: 4 lines per frame, to $DF (off the top)
+C BA5D
+C BA5F
+C BA61
+L BA63 CN_TARGET
+C BA63
+C BA65
+C BA67
+C BA69
+C BA6B upside down from now on
+L BA6D CN_LAND
+C BA6D
+C BA6F
+C BA71 cannon empty and unloaded
+C BA73
+C BA75
+C BA77
+L BA7A VBI_TAIL
+H BA7A
+| VBI_TAIL - end of GAME_VBI: advance the demo recording, then station 10's cannon or
+| station 8's lift, then return from the interrupt.
+C BA7A demo: count down the current input ...
+C BA7C
+C BA7E
+C BA80
+C BA82 ... and move to the next (input, frames) pair
+C BA84
+C BA85
+C BA87
+C BA89
+C BA8B
+L BA8D VT_COUNT
+C BA8D
+C BA8F
+C BA91
+L BA93 VT_STATION
+C BA93
+C BA95
+C BA97
+C BA99
+L BA9C LIFT_CONTROL
+H BA9C
+| LIFT_CONTROL - station 8. Standing on the lift, SPACE (or the 5200's # key) hands the
+| joystick to the lift; SPACE or the button hands it back. While in control the stick
+| drives the lift (and Bob on it): left/right within x $67-$9B, up/down within lines
+| $59-$B3. It rises at half the speed it falls (a line every 4
+| frames up, every 2 down). The scissor arms are extended or
+| folded by one line each time the platform moves, and a motor hum plays on voice 3.
+C BA9C no lift?
+C BA9E
+C BAA0 Bob not on it?
+C BAA2
+C BAA4
+C BAA6 already driving?
+C BAA8
+C BAAA only when walking or standing ...
+C BAAC
+C BAAE
+C BAB0
+C BAB2
+C BAB4
+C BAB6
+C BAB8 ... and SPACE pressed
+C BABB
+C BABD take control
+C BABF
+C BAC1
+L BAC3 LC_ON
+C BAC3
+L BAC5 LC_EXIT
+C BAC5
+L BAC8 LC_DRIVE
+C BAC8 SPACE or button again?
+C BACB
+C BACD give control back, motor off
+C BACF
+C BAD1
+C BAD3
+C BAD4
+C BAD6
+L BAD8 LC_STICK
+C BAD8 motor hum
+C BADA
+C BADC
+C BADE direction from the stick
+C BAE0
+C BAE3
+C BAE4
+C BAE6
+L BAE8 LC_DOWN
+C BAE8
+C BAE9
+C BAEB
+L BAED LC_LEFT
+C BAED
+C BAEE
+C BAF0
+L BAF2 LC_RIGHT
+C BAF2
+C BAF3
+C BAF5
+L BAF7 LC_PITCH
+C BAF7 motor note: idle, or higher when moving sideways
+C BAF9
+C BAFA
+C BAFB
+C BAFD
+L BAFF LC_UP
+C BAFF going up: only one frame in four
+C BB01
+C BB03
+C BB05
+C BB07
+C BB09
+L BB0B LC_UP_NOTE
+C BB0B
+L BB0D LC_DOWN_NOTE
+C BB0D
+C BB0F
+C BB11
+L BB13 LC_SET_NOTE
+C BB13
+C BB15
+C BB17
+C BB19 move on even frames only
+C BB1B
+C BB1D
+C BB1F sideways, within limits
+C BB20
+C BB21
+C BB23
+C BB25
+C BB27
+C BB29
+C BB2B
+C BB2D Bob moves with it
+C BB2E
+C BB2F
+C BB31
+C BB33
+C BB35
+C BB37
+L BB39 LC_VERT
+C BB39 up or down, within limits
+C BB3B
+C BB3D
+C BB3E
+C BB3F
+C BB41
+C BB43
+C BB45
+C BB47
+C BB49
+C BB4B Bob too
+C BB4D
+C BB4E
+C BB50
+C BB52 scissor phase +1 going down, -1 going up (cycle of 7)
+C BB54
+C BB55
+C BB57
+C BB58
+C BB5A
+C BB5C
+C BB5E
+L BB60 LC_PHASE_UP
+C BB60
+C BB61
+C BB63
+L BB65 LC_PHASE
+C BB65
+C BB67 redraw the top of the lift in player 3: clear above, platform, scissor line
+C BB69
+C BB6B
+C BB6E
+C BB70
+C BB73
+C BB76
+C BB79
+C BB7C
+L BB7F LC_DONE
+C BB7F
+L BB82 LIFT_KEY
+H BB82
+| LIFT_KEY - Z set if the button (LIFT_KEY) or SPACE (LIFT_SPACE) has just been pressed:
+| LIFT_DLY must have counted down to 0 while nothing was pressed.
+C BB82
+C BB84
+C BB86
+C BB88
+L BB8A LIFT_SPACE
+C BB8A
+C BB8C
+C BB8E
+C BB90 consume the key
+C BB92
+L BB94 LK_PRESSED
+C BB94 pressed: Z set only if the delay had run out
+C BB95
+C BB96
+C BB98
+L BB99 LK_UP
+C BB99 not pressed: count the delay down
+C BB9A
+C BB9C
+L BB9D LK_RESTART
+C BB9D
+L BB9F LK_SET
+C BB9F
+C BBA1
+C BBA2
+L BBA3 READ_POTS
+H BBA3
+| READ_POTS - 5200 analog stick: POT0 -> POT_X, POT1 -> POT_Y, start the next scan.
+C BBA3
+C BBA5
+C BBA7
+C BBA9
+C BBAB
+C BBAD
+C BBAF
+L BBB0 GAME_VBI
+H BBB0
+| GAME_VBI - the game. Everything that moves runs here, once per frame:
+|   frame counter, display list, the bonus box (missiles), P/M DMA, mutant band setup,
+|   colours, 5200 pots, mutants turning edible, "time running out" warnings, pause,
+|   status-line blink, Bob touching deadly scenery, dying, the extra-life jingle,
+|   MOVE_BOB, moving platforms, Bob's sprite position and size, CLAIM_FLOOR,
+|   pulverizers, end-of-turn timing, the credits reveal, status line, items, the bonus
+|   timer, the end-of-station bonus count and screen wipe, mutant points, the phone-number
+|   code, and finally VBI_TAIL (demo, cannon, lift).
+C BBB0
+C BBB3
+C BBB5 display list at $2000 (Y = 0 after POLL_KEYS)
+C BBB7
+C BBBA
+C BBBD missiles double width: the box behind the bonus
+C BBBF
+C BBC1 HPOSM3 = $84, M2 = $80, M1 = $7C (M0 = $78, or $7C below 1000)
+C BBC3
+C BBC5
+L BBC6 GV_BOX
+C BBC6
+C BBC8
+C BBCA
+C BBCB
+C BBCC
+C BBCE narrower box when the bonus is under 1000
+C BBD1
+C BBD3
+L BBD5 GV_BOX0
+C BBD5
+C BBD7 DMACTL: normal width, players + missiles, single-line, display list
+C BBD9
+C BBDC X = $3E: ($0C,x) = (pGRACTL): players and missiles on
+C BBDE
+C BBE0 the first DLI handles band 4
+C BBE2
+C BBE4 collisions of the last band of the previous frame
+C BBE7
+C BBE8 player 3 normal width, first mutant record
+C BBEA
+C BBEC status line colours
+C BBEE
+C BBF0
+C BBF2
+C BBF4
+C BBF6
+C BBF8
+C BBFA 5200 stick
+C BBFD an item was picked up: every mutant still alive turns edible
+C BBFF
+C BC01 edible time = $AF - 16 * min(zone, 9) (no SEC: carry is clear)
+C BC03
+C BC05
+C BC07
+L BC09 GV_EDIBLE_TIME
+C BC09
+C BC0A
+C BC0B
+C BC0C
+C BC0D
+C BC0F
+C BC11
+C BC13
+C BC15
+C BC17
+L BC19 GV_EDIBLE
+C BC19
+C BC1C
+C BC1E
+C BC20 edible, green, start blinking
+C BC22
+C BC25
+C BC27
+C BC2A
+C BC2C
+C BC2F
+C BC31
+C BC34
+L BC37 GV_EDIBLE_NEXT
+C BC37
+C BC38
+C BC39
+C BC3B
+C BC3C
+C BC3D
+C BC3F
+L BC41 GV_WARN
+C BC41 bonus box colour
+C BC43 time running out (bonus under 700, Bob alive, station not done)?
+C BC45
+C BC47
+C BC49
+C BC4B
+C BC4D
+C BC4F
+C BC51
+C BC53
+C BC55
+C BC56
+C BC58
+C BC5A
+C BC5C
+C BC5E
+C BC61
+C BC63
+C BC65
+C BC68
+C BC6A
+C BC6C Bob's face colour flickers
+C BC6E
+C BC70
+C BC72
+C BC74
+C BC76 the box blinks (8 frames on, 8 off)
+C BC79
+C BC7B
+C BC7D
+C BC7F
+C BC81
+L BC83 GV_TICK
+C BC83 a tick every 4 frames ...
+C BC85
+C BC87
+C BC89
+C BC8B
+C BC8D
+C BC8F
+C BC90
+C BC92 ... with gaps that shrink as the bonus falls
+C BC94
+C BC96
+C BC97
+C BC99
+C BC9A
+C BC9C
+C BC9E
+C BCA0
+C BCA2
+L BCA4 GV_TICK_VOL
+C BCA4
+C BCA5
+C BCA7
+L BCA9 GV_BOX_COL
+C BCA9
+C BCAA
+C BCAC
+C BCAE turn over: nothing more
+C BCB0
+C BCB2 paused?
+C BCB4
+C BCB6
+C BCB9
+C BCBB
+C BCBD still paused: keep quiet
+L BCC0 GV_EXIT
+C BCC0
+L BCC3 GV_RUN
+C BCC3 every 30 frames toggle CHACTL bit 0 (blank bit-7 characters): the score blinks
+C BCC5
+C BCC7
+C BCC9
+C BCCB
+C BCCD
+C BCCE
+C BCD0
+C BCD2
+L BCD5 GV_TOUCH
+C BCD5 already dying?
+C BCD7
+C BCD9 Bob (players 0-2) touching pixel colour 1?
+C BCDB
+L BCDD GV_TOUCH_LOOP
+C BCDD (pHPOSM2,x) .. (pHPOSM0,x) read P2PF, P1PF, P0PF
+C BCDF
+C BCE0
+C BCE1
+C BCE3
+C BCE5
+C BCE7
+C BCE9 deadly on station 6 (the waste), 8 (its moving bar) ...
+C BCEB
+C BCED
+C BCEF
+C BCF1 ... and 9 (a pulverizer: a jump is stopped dead)
+C BCF3
+C BCF5
+C BCF7
+C BCF9
+C BCFB
+C BCFD
+C BCFF
+C BD01
+C BD03
+L BD05 GV_KILLED
+C BD05 touched by a mutant or out of time?
+C BD07
+L BD09 GV_DIE
+C BD09 Bob starts dying
+C BD0B
+C BD0D
+C BD0E
+C BD10 station 10: inside or beside the cannon he melts at once
+C BD12
+C BD14
+C BD16
+C BD18
+C BD19
+C BD1B
+C BD1C
+C BD1E
+C BD20
+C BD22
+C BD24
+C BD26
+C BD28
+C BD2A
+C BD2B
+C BD2D
+C BD2F
+C BD31
+C BD33
+C BD35
+C BD37
+C BD39
+L BD3B GV_DIE_POSE
+C BD3B in the air: wait until he lands
+C BD3D
+C BD3F
+C BD41 on a ladder: he lets go and falls (a fatal fall)
+C BD43
+C BD45
+C BD47
+C BD49
+C BD4B
+C BD4D
+C BD4F
+C BD51
+L BD53 GV_DYING
+C BD53 dying and in the air: wait
+C BD55
+C BD57
+L BD59 GV_DYING2
+C BD59 on the ground and not yet melting: melt
+C BD5B
+C BD5D
+C BD5F
+L BD61 GV_MELT
+C BD61
+L BD64 GV_THROB
+C BD64 every 4 frames: noise, and Bob's size pulses (DYING 4,3,2,1,4 ...)
+C BD66
+C BD68
+C BD6A
+C BD6C
+C BD6E
+C BD70
+C BD72
+C BD74
+C BD76
+C BD78
+C BD79
+C BD7B
+L BD7D GV_THROB_SET
+C BD7D
+L BD7F GV_XLIFE
+C BD7F extra-life jingle playing (XLIFE 1-9)?
+C BD81
+C BD83
+C BD85
+C BD87 every 16 frames one note
+C BD89
+C BD8B
+C BD8D
+C BD8F
+C BD91 finished: voice 4 off
+C BD93
+C BD94
+C BD96
+L BD98 GV_XLIFE_NOTE
+C BD98 each 16 frames: 8 frames of note $8C on a blue background, 8 of note $64 on black
+C BD9A
+C BD9C
+C BD9E
+C BDA0
+L BDA2 GV_XLIFE_ON
+C BDA2
+C BDA4
+L BDA6 GV_XLIFE_SET
+C BDA6
+C BDA8
+C BDA9
+C BDAA
+C BDAC
+C BDAE
+C BDB0
+C BDB1
+L BDB4 GV_XLIFE_OFF
+C BDB4
+L BDB6 GV_BACKGROUND
+C BDB6
+C BDB8 Bob may move, the station is not finished and he is not driving the lift?
+C BDBA
+C BDBC
+C BDBE
+C BDC0
+C BDC2
+C BDC4 flying from the cannon: only redraw him
+C BDC6
+C BDC8
+C BDCA
+C BDCD
+L BDD0 GV_MOVE
+C BDD0 move Bob
+C BDD3
+C BDD5
+C BDD7
+L BDD9 GV_TRAIL
+C BDD9 station 10: wipe the 5 lines under Bob's sprite (he can move 2 lines a frame)
+C BDDB
+C BDDD
+C BDDF
+C BDE1
+C BDE3
+C BDE4
+C BDE6
+C BDE7
+C BDE9
+L BDEB GV_TRAIL_LOOP
+C BDEB
+C BDEE
+C BDF1
+C BDF4
+C BDF5
+C BDF6
+L BDF8 GV_POSITION
+C BDF8 moving platforms
+C BDFB Bob's horizontal position (0 = off screen once the station is cleared) ...
+C BDFD
+C BDFF
+C BE01 ... offset to keep him centred while he throbs
+C BE03
+C BE04
+L BE07 GV_HPOS
+C BE07
+C BE09
+C BE0B
+C BE0D
+C BE0F width of players 0-2 (normal, double, quadruple)
+C BE12
+C BE14
+C BE16
+C BE18 claim girder sections
+C BE1B station 9's pulverizers
+C BE1E every 4 frames voice 3 fades one step
+C BE20
+C BE22
+C BE24
+C BE25
+C BE27
+C BE29
+C BE2A
+C BE2C
+C BE2D
+C BE2F
+L BE31 GV_DEAD
+C BE31 dead (and not during the extra-life jingle): end the turn after two seconds
+C BE33
+C BE35
+C BE37
+C BE39
+C BE3A
+C BE3C
+C BE3E
+C BE40
+C BE42
+C BE44
+C BE46
+C BE48
+C BE4A
+L BE4C GV_CREDITS
+C BE4C credits screen: reveal the hidden text around Bob
+C BE4E
+C BE50
+C BE52 30 lines from 12 above Bob's top ...
+C BE54
+C BE55
+C BE57
+C BE59
+C BE5B
+C BE5D ... at x = BOB_X + 3
+C BE5F
+C BE60
+C BE62
+C BE64 recolour in colour 2
+C BE66
+L BE68 GV_REVEAL
+C BE68
+C BE6A
+C BE6C
+C BE6E
+C BE70
+C BE72 a hidden (colour 1) pixel?
+C BE75
+C BE77
+C BE79
+C BE7B
+C BE7C
+C BE7E
+C BE7F
+L BE82 GV_REVEAL_NEXT
+C BE82
+C BE84
+C BE86
+C BE88
+L BE8B GV_PLAY
+C BE8B status line
+C BE8E items
+C BE91 dying or dead: no timer
+C BE93
+C BE95
+C BE97
+C BE98
+C BE9A
+C BE9C station cleared: count the bonus into the score
+C BE9E
+C BEA0 bonus timer: -100 every 180 frames (3 seconds)
+C BEA2
+C BEA4
+C BEA6
+L BEA8 BONUS_DOWN
+C BEA8 hundreds digit - 1
+C BEAB
+C BEAE
+C BEB0
+C BEB2
+C BEB4 borrow from the thousands
+C BEB6
+C BEB9
+C BEBC
+C BEBF
+C BEC1
+C BEC3 (a leading zero is shown as a blank)
+C BEC5
+C BEC8
+L BECA BD_ZERO
+C BECA bonus 0 while sections remain: out of time
+C BECD
+C BECF
+C BED1
+C BED3
+C BED4
+C BED6
+L BED8 BD_DONE
+C BED8
+L BEDB TALLY
+C BEDB station cleared: voices 2 and 3 off
+C BEDC
+C BEDE
+C BEE0 bonus left?
+C BEE3
+C BEE6
+C BEE8
+C BEEA every 4 frames: a click, +100 to the score, -100 from the bonus
+C BEEC
+C BEEE
+C BEF0
+C BEF2
+C BEF4
+C BEF5
+C BEF7
+L BEF9 TALLY_STEP
+C BEF9
+C BEFB
+C BEFD
+C BEFF
+C BF01
+C BF04 X = $3F: ($1D,x) = (pAUDF4): AUDF4 = $3F
+C BF06
+C BF07
+C BF09
+L BF0B WIPE
+C BF0B bonus all counted (and no jingle playing): wipe the screen from the bottom
+C BF0D
+C BF0E
+C BF10
+C BF12 remove the mutants' P/M data on this line
+C BF14
+C BF16
+C BF19
+C BF1C replace this display-list line by a JVB: the picture ends here
+C BF1E
+C BF20
+C BF22
+C BF25
+L BF27 WIPE_LMS
+C BF27 (lines after the LMS sit 2 bytes further on)
+L BF2A WIPE_NEXT
+C BF2A
+C BF2B
+C BF2D rising tone
+C BF2E
+C BF30
+C BF32
+C BF34
+L BF36 GV_MUTSCORE
+C BF36 a mutant was eaten: 80 or 90 points (digit 5 = tens)
+C BF38
+C BF3A
+C BF3C
+C BF3F
+L BF41 GV_PAUSE
+C BF41 ESC pauses
+C BF44
+C BF46
+C BF48
+C BF4B
+L BF4E PHONE_CODE
+H BF4E
+| PHONE_CODE - the famous cheat: type Big Five's phone number, 213-782-6861, during a
+| game, then a station number with SHIFT, and that station starts at once. The code is
+| checked against the number as printed in the credits text, "(213) 782-6861", skipping
+| ")", the space and "-". A wrong digit starts the count again; holding a key (the same
+| digit repeating) is ignored. Once all 13 positions are matched, SHIFT + digit warps.
+C BF4E a digit key?
+C BF51
+C BF53 whole number typed?
+C BF55
+C BF57
+C BF59 digit -> screen code
+C BF5A
+C BF5B
+C BF5D the next digit of the number?
+C BF60
+C BF62 the same key still repeating?
+C BF64
+C BF66 wrong: start again
+L BF68 PC_MATCH
+C BF68
+C BF6A
+C BF6B skip ") " and "-"
+C BF6E
+C BF70
+C BF72
+C BF73
+L BF74 PC_DASH
+C BF74
+C BF76
+C BF78
+L BF79 PC_SET
+C BF79
+L BF7B PC_EXIT
+C BF7B
+L BF7E PC_WARP
+C BF7E code complete: SHIFT held (SKSTAT bit 3 = 0)?
+C BF80
+C BF82
+C BF84
+C BF86 station = the digit (0 means 10), and start it
+C BF88
+L BF8B SILENCE
+H BF8B
+| SILENCE - all four voices off (SILENCE_234 leaves voice 1 alone; A must be 0).
+C BF8B
+C BF8D
+C BF8E
+L BF90 SILENCE_234
+C BF90
+C BF91
+C BF93
+C BF95
+C BF97
+L BF98 CHECK_PAUSE
+H BF98
+| CHECK_PAUSE - ESC (5200: PAUSE) toggles PAUSED, with a debounce. Not in the demo.
+C BF98
+C BF9A
+C BF9C
+C BF9E
+C BFA0
+C BFA2
+C BFA4
+C BFA6
+L BFA8 PAUSE_RTS
+C BFA8
+L BFA9 PAUSE_KEY
+C BFA9
+C BFAB
+C BFAD
+C BFAF
+C BFB1
+C BFB3
+C BFB5 toggle
+C BFB7
+C BFB8
+C BFBA
+C BFBC
+L BFBD JUMP_ARC
+H BFBD
+| JUMP_ARC - vertical movement per frame of a jump: 11 lines up, a pause, 3 up, pause,
+| 2 up, pause, then down again; after index $1F Bob simply falls 1 line per frame.
+| (Indexes 30 and 31 read the zeros at the start of BOB_SIZE.)
+D BFBD BFDA byte 10
+L BFDB BOB_SIZE
+H BFDB
+| BOB_SIZE / BOB_SIZE_X - while dying, DYING (1-4) picks the players' width (SIZEP:
+| 0 normal, 1 double, 3 quadruple) and an x offset that keeps Bob centred: he throbs.
+D BFDB BFDF byte
+L BFE0 BOB_SIZE_X
+D BFE0 BFE4 byte
+L BFE5 FEET_OFFSETS
+H BFE5
+| FEET_OFFSETS - for walking/standing frames 0-6, the x offsets of Bob's two feet
+| (the pixels CLAIM_FLOOR looks under).
+D BFE5 BFF2 byte 2
+L BFF3 UNUSED_END
+H BFF3
+| Unused.
+D BFF3 BFF9 byte
+L BFFA CART_TRAILER
+H BFFA
+| The cartridge trailer. On the 400/800:
+|   $BFFA start address (RESTART)         $BFFC 0 = a cartridge is present
+|   $BFFD option byte $FF: bit 7 "diagnostic cartridge" = jump to the init address
+|         straight after RESET, before the OS initialises anything
+|   $BFFE init address (COLD_START)
+| On the 5200 the BIOS reads $BFFD = $FF as "skip the title screen" and starts the game
+| through $BFFE: the same bytes serve both machines.
+D BFFA BFFB word
+D BFFC BFFD byte
+D BFFE BFFF word

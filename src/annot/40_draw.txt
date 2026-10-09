@@ -1,0 +1,548 @@
+############################################################ game start, demo table, drawing primitives
+L 9768 START_GAME
+H 9768
+| START_GAME - start a game (DEMO_PTR+1 = 0) or the demo (DEMO_PTR+1 <> 0).
+| A real game starts in station 1 of the zone chosen on the title screen (START_ZONE,
+| 1 unless a digit key was used). The demo plays station 1 from a recording.
+C 9768 screen and NMIs off
+C 976A
+C 976D
+C 9770 fresh player variables for both players
+C 9773 demo?
+C 9775
+C 9777 real game: both players start in START_ZONE
+C 9779
+C 977B   (player 2's copy)
+C 977D build the station and play
+L 9780 START_DEMO
+C 9780 demo: station 1, recording 0
+C 9782
+C 9784
+C 9785
+L 9788 DEMO_TABLE
+H 9788
+| DEMO_TABLE - addresses of the recorded demos: 0 = station 1 (after the high-score
+| screen), 2 = the opening credits on station 11.
+D 9788 978B word
+L 978C DEMO_STATION1
+H 978C
+| Recorded demo input. Each pair is (stick+button, frames): bits 0-3 are the joystick
+| (PORTA format, 0 = pushed: 1 up, 2 down, 4 left, 8 right), bit 4 is the button
+| (0 = pressed). $1F = nothing, $17 = right, $1B = left, $1E = up, $1D = down,
+| $0F = jump on the spot, $0B/$07 = jump left/right.
+D 978C 9817 byte 16
+L 9818 DEMO_CREDITS
+D 9818 989F byte 16
+L 98A0 DRAW_SLIDES
+H 98A0
+| DRAW_SLIDES - draw the station's slides (chutes) from the list at SLIDES.
+| Entry: rows, x (P/M), y (Bob's y at the top), step (signed x shift per row).
+| Each row is 8 pixels of colour 2 (PLOT_COLOR left at 4 by DRAW_LADDERS); the band moves "step" pixels
+| sideways per row, so it slants. The same entries tell MOVE_BOB where slides start.
+C 98A0
+C 98A2
+L 98A4 DS_NEXT
+C 98A4
+C 98A6 rows (0 = end of list)
+C 98A8
+C 98AA
+L 98AB DS_ENTRY
+C 98AB
+C 98AD x: P/M coordinates -> pixel column
+C 98AE
+C 98B0
+C 98B1
+C 98B3
+C 98B5 y: Bob's top -> the line under his feet
+C 98B6
+C 98B8
+C 98B9
+C 98BB
+C 98BD step per row
+C 98BE
+C 98C0
+C 98C2
+C 98C3
+L 98C5 DS_ROW
+C 98C5 8 pixels per row
+C 98C7
+L 98C9 DS_PIXEL
+C 98C9
+C 98CB
+C 98CD
+C 98D0
+C 98D2
+C 98D4
+C 98D6 next line down
+C 98D8 x = x + 8 - 9 + step + 1 (carry set) = x + step
+C 98DA
+C 98DB
+C 98DD
+C 98DF
+C 98E1
+C 98E3
+C 98E5
+L 98E7 INIT_LIFTS
+H 98E7
+| INIT_LIFTS - copy the moving platforms (6-byte records, list at LIFTS) to LIFT_TAB and
+| draw them. Record: 0 timer, 1 width, 2 x, 3 y, 4 travel, 5 speed (signed).
+| Each platform is "width" columns of 3 pixels in colour 3, like a girder (colour 1 on
+| station 8, where it is the lift).
+C 98E7 Y = -1: CP_BYTE pre-increments
+C 98E9
+C 98EB colour 3 ...
+C 98ED
+C 98EF
+C 98F1
+C 98F3 ... except station 8 (colour 1)
+L 98F5 IL_SET
+C 98F5
+L 98F7 IL_NEXT
+C 98F7
+C 98F9 timer (0 = end of list)
+C 98FC
+C 98FE width
+C 9901
+C 9903 x
+C 9906
+C 9908 y
+C 990B
+C 990D travel (copied only)
+C 9910 speed (copied only)
+C 9913
+L 9915 IL_COLUMN
+C 9915 3 pixels down
+C 9917
+L 9919 IL_PIXEL
+C 9919
+C 991B
+C 991D
+C 9920
+C 9922
+C 9924
+C 9926 back up and one column right
+C 9928
+C 9929
+C 992B
+C 992D
+C 992F
+C 9931
+C 9933
+L 9935 CP_BYTE
+C 9935 copy the next byte of the list into LIFT_TAB
+C 9936
+C 9938
+L 993B CP_RTS
+C 993B
+L 993C DRAW_LADDERS
+H 993C
+| DRAW_LADDERS - draw the station's ladders (list at LADDERS) in colour 2.
+| Entry: height, x (P/M), y, style. A ladder is 8 pixels wide: a 2-pixel rail, a
+| 4-pixel rung or gap, a 2-pixel rail, with a rung every 4 lines. Style bit 7 makes a
+| "ladder top" that starts 5 lines higher; the low bits set the rung phase.
+C 993C colour 2
+C 993E
+C 9940
+C 9942
+L 9944 DL_NEXT
+C 9944
+C 9946 height (0 = end of list)
+C 9948
+C 994A
+L 994B DL_ENTRY
+C 994B
+C 994D x -> pixel column
+C 994E
+C 9950
+C 9951
+C 9953
+C 9955 y
+C 9956
+C 9958
+C 995A style
+C 995B
+C 995D
+C 995F bit 7: extend 5 lines upwards
+C 9961
+C 9962
+C 9964
+C 9965
+C 9967
+C 9969
+C 996B
+C 996C
+C 996E
+C 9970
+L 9971 DL_PHASE
+C 9971 rung counter
+C 9973
+C 9974
+L 9976 DL_LINE
+C 9976 left rail
+C 9979 rung on this line?
+C 997B
+C 997D yes: 4 pixels
+C 9980
+L 9983 DL_GAP
+C 9983 no: skip 4 pixels
+C 9985
+C 9986
+C 9988
+L 998A DL_RAIL
+C 998A right rail
+C 998D back to the left edge, next line
+C 998F
+C 9990
+C 9992
+C 9994
+C 9996 a rung every 4th line
+C 9998
+C 999A
+C 999C
+L 999E DL_COUNT
+C 999E
+C 99A0
+C 99A2
+L 99A4 PLOT4
+C 99A4 4 pixels in a row
+C 99A6
+L 99A8 PLOT2
+C 99A8 2 pixels in a row
+L 99AA PLOT_RUN
+C 99AA
+L 99AC PLOT_RUN_LOOP
+C 99AC
+C 99AE
+C 99B0
+C 99B3
+C 99B5
+C 99B7
+C 99B9
+L 99BA DRAW_HLINE
+H 99BA
+| DRAW_HLINE - horizontal line of A pixels: line y = X, from pixel x = Y rightwards.
+| (DRAW_HLINE_A takes the line in PLOT_X.) Pixels already drawn are left alone.
+| Note the swapped use of PLOT_X (here the line) and PLOT_Y (here the x position).
+C 99BA line y
+L 99BC DRAW_HLINE_A
+C 99BC length
+C 99BE first x
+L 99C0 DH_LOOP
+C 99C0
+C 99C2
+C 99C4
+C 99C7 next pixel to the right
+C 99C9
+C 99CB
+C 99CD
+L 99CE DRAW_GIRDERS
+H 99CE
+| DRAW_GIRDERS - draw the station's girders (floors) and count their sections.
+| In: Y/X = list address, A = slope. The list holds three sub-lists, each ended by 0:
+| sloping down (A = 3), sloping up (DRAW_GIRDERS_MORE with A = 5) and flat (A = 0).
+| Entry: sections, x (pixel), y. A section is 4 pixels wide and is the unit Bob
+| claims; every section drawn is added to SECTIONS. A girder is drawn as three thin
+| stripes in colour 3; claiming fills the gaps so the section turns solid. Flat girders alternate two stripe patterns so they
+| look like brickwork, sloped ones move one line per section (y + 4 - slope).
+C 99CE list address
+C 99D0
+C 99D2
+C 99D4
+C 99D6 no sections counted yet
+C 99D8 colour 3
+C 99DA
+L 99DC DRAW_GIRDERS_MORE
+C 99DC slope for this sub-list
+L 99DE DG_NEXT
+C 99DE
+C 99E0 sections (0 = end of this sub-list)
+C 99E2
+C 99E4 step past the 0 for the next call
+C 99E5
+C 99E7
+L 99E8 DG_ENTRY
+C 99E8
+C 99EA count the sections to be claimed
+C 99EB
+C 99ED
+C 99EF x
+C 99F0
+C 99F2
+C 99F4 y
+C 99F5
+C 99F7
+C 99F9
+C 99FA
+L 99FC DG_SECTION
+C 99FC flat or sloped?
+C 99FE
+C 9A00 flat: a section with a thick top stripe ...
+C 9A03
+C 9A05
+C 9A06
+C 9A08
+C 9A0A
+C 9A0C
+C 9A0E ... then one with thin stripes
+C 9A11
+C 9A13
+L 9A15 DG_SLOPED
+C 9A15 sloped: one section, then move y by (slope - 4)
+C 9A18
+L 9A1A DG_RISE
+C 9A1A
+C 9A1C
+C 9A1D
+C 9A1F
+C 9A21
+C 9A23
+L 9A25 DG_THICK
+C 9A25 an extra stripe line, then the three normal stripes
+C 9A28
+L 9A2B DG_STRIPES
+C 9A2B three stripes, two lines apart
+C 9A2D
+L 9A2F DG_STRIPE
+C 9A2F
+C 9A32
+C 9A34
+C 9A36
+C 9A39
+C 9A3B
+L 9A3D DG_ROW4
+C 9A3D 4 pixels from (PLOT_X, PLOT_Y), PLOT_X advances
+C 9A3F
+L 9A41 DG_ROW4_LOOP
+C 9A41
+C 9A43
+C 9A45
+C 9A48
+C 9A4A
+C 9A4C
+C 9A4E
+L 9A4F DG_BACK
+C 9A4F x back 4 pixels, one line down
+C 9A51
+C 9A52
+C 9A54
+C 9A56
+C 9A58
+L 9A59 PLOT_IF_EMPTY
+H 9A59
+| PLOT_IF_EMPTY - set pixel (Y = pixel x 0-159, X = line y 8-191) to colour PLOT_COLOR,
+| but only if it is still background. Mode E packs 4 pixels per byte, 2 bits each,
+| leftmost pixel in bits 7-6:
+|   byte = LINE_LO/HI[y] + x/4,  bit pair = x and 3.
+| PIXEL_MASK[x and 3] isolates the pair; PIXEL_SET[colour + (x and 3)] supplies it.
+C 9A59 address of line y
+C 9A5C
+C 9A5E
+C 9A61
+C 9A63 X = x and 3 (pixel within the byte)
+C 9A64
+C 9A66
+C 9A67 Y = x / 4 (byte within the line)
+C 9A68
+C 9A69
+C 9A6A
+C 9A6B already drawn?
+C 9A6E
+C 9A70 yes: leave it
+C 9A72 pick the bit pattern for this colour and position
+C 9A73
+C 9A74
+C 9A76
+C 9A77
+C 9A7A
+C 9A7C
+L 9A7E PIE_RTS
+C 9A7E
+L 9A7F PLOT
+H 9A7F
+| PLOT - set pixel (PLOT_X, PLOT_Y) to colour PLOT_COLOR, replacing what was there.
+| Entry points: PLOT (from PLOT_X/PLOT_Y), PLOT_YX_Y (x already in Y),
+| PLOT_XY (Y = x, X = y), PLOT_PTR (line address already in PTR).
+C 9A7F
+L 9A81 PLOT_YX_Y
+C 9A81
+L 9A83 PLOT_XY
+C 9A83 address of line y
+C 9A86
+C 9A88
+C 9A8B
+L 9A8D PLOT_PTR
+C 9A8D X = x and 3
+C 9A8E
+C 9A90
+C 9A91 Y = x / 4
+C 9A92
+C 9A93
+C 9A94
+C 9A95 clear the old pixel
+C 9A98
+C 9A9A
+C 9A9B
+C 9A9C
+C 9A9D
+C 9A9F
+C 9AA0
+C 9AA1 and set the new colour
+C 9AA4
+C 9AA6
+L 9AA7 READ_PIXEL
+H 9AA7
+| READ_PIXEL - colour of the pixel at P/M x = PLOT_X, line y = PLOT_Y (0 = background,
+| 1 = items and text, 2 = ladders and slides, 3 = girders and platforms).
+| Out: A = colour, Z set if it is colour 3. Lines outside 8-191 read as line 8.
+| READ_PIXEL_XY takes X = y, Y = x; READ_PIXEL_PTR uses the line already in PIX_PTR.
+C 9AA7
+C 9AA9
+L 9AAB READ_PIXEL_XY
+C 9AAB clamp y into the bitmap
+C 9AAD
+C 9AAF
+C 9AB1
+L 9AB3 RP_CLAMP
+C 9AB3
+L 9AB5 RP_LINE
+C 9AB5
+C 9AB8
+C 9ABA
+C 9ABD
+L 9ABF READ_PIXEL_PTR
+C 9ABF P/M x -> pixel x
+C 9AC0
+C 9AC1
+C 9AC3
+C 9AC4 X = x and 3
+C 9AC6
+C 9AC7 Y = x / 4
+C 9AC8
+C 9AC9
+C 9ACA
+C 9ACB
+L 9ACD RP_SHIFT
+C 9ACD shift the pair down to bits 1-0
+C 9ACF
+C 9AD1
+C 9AD2
+C 9AD3
+C 9AD4
+L 9AD6 RP_DONE
+C 9AD6
+C 9AD8 Z = colour 3?
+L 9ADA RP_RTS
+C 9ADA
+L 9ADB DL_CREDITS_TOP
+H 9ADB
+| Station 11 (the opening credits) has no status line: these 4 bytes replace the top of
+| the display list with "8 blank lines + DLI" and "mode E, LMS $2100".
+D 9ADB 9ADE byte
+L 9ADF BUILD_DLIST
+H 9ADF
+| BUILD_DLIST - build the game screen's display list at $2000 and the line tables.
+|   $2000  3 x "8 blank lines"                      (top border)
+|   $2003  mode 2 + LMS $20D8 + DLI                  status line (40 text characters)
+|   $2006  184 x mode E (160 x 1, 4 colours)        the playfield bitmap at $2100
+|          bitmap lines 46, 93 and 140 also request a DLI (mutant bands, see DLI_MUTANTS)
+|          line 96 reloads the address ($3000): ANTIC cannot cross a 4K boundary
+|   $20C0  JVB $2000
+| Then LINE_LO/LINE_HI[y] = $2100 + 40 * (y - 8) for y = 8..191, and the bitmap is cleared.
+C 9ADF 3 lines of 8 blank scan lines
+C 9AE1
+C 9AE4
+C 9AE7
+C 9AEA status line: mode 2 + LMS + DLI
+C 9AEC
+C 9AEF   at $20D8
+C 9AF1
+C 9AF4
+C 9AF6
+C 9AF9 186 x mode E (two are overwritten by the LMS below)
+C 9AFB
+L 9AFD BD_FILL
+C 9AFD
+C 9B00
+C 9B01
+C 9B03 the credits screen has no status line
+C 9B05
+C 9B07
+C 9B09 DLIs for the mutant bands
+C 9B0B
+C 9B0E
+C 9B11
+C 9B14
+L 9B16 BD_CREDITS
+C 9B16
+L 9B18 BD_CREDITS_LOOP
+C 9B18
+C 9B1B
+C 9B1E
+C 9B1F
+L 9B21 BD_LMS
+C 9B21 line 96: mode E + LMS $3000 (across the 4K boundary)
+C 9B23
+C 9B26
+C 9B28
+C 9B2B
+C 9B2D
+C 9B30 JVB $2000
+C 9B32
+C 9B35
+C 9B37
+C 9B3A
+C 9B3C
+C 9B3F line tables for y = 8 ... 191
+C 9B41
+C 9B43
+C 9B44
+L 9B46 BD_TABLE
+C 9B46
+C 9B49
+C 9B4A
+C 9B4D + 40 bytes per line
+C 9B4F
+C 9B50
+C 9B52
+C 9B54
+C 9B56
+L 9B57 BD_TABLE_NEXT
+C 9B57
+C 9B58
+C 9B5A
+C 9B5C clear $20D8 onwards: status line + bitmap ($1D28 bytes)
+C 9B5E
+C 9B60
+C 9B62
+C 9B64
+C 9B66
+L 9B68 ZERO_MEM
+H 9B68
+| ZERO_MEM - zero memory from (PTR) for -(X:Y) bytes.
+C 9B68
+C 9B6A
+C 9B6C
+C 9B6E
+L 9B6F ZM_LOOP
+C 9B6F
+C 9B71
+C 9B73
+C 9B75
+L 9B77 ZM_COUNT
+C 9B77
+C 9B79
+C 9B7B
+C 9B7D
+C 9B7F
+L 9B80 PIXEL_SET
+H 9B80
+| PIXEL_SET - bits to OR in, indexed by PLOT_COLOR + (x and 3):
+|   +0 colour 1 ($40 $10 $04 $01)   +4 colour 2 ($80 $20 $08 $02)   +8 colour 3 (PIXEL_MASK)
+|  +12 background (the zeros after PIXEL_MASK).
+| PIXEL_MASK - the two bits of each pixel ($C0 $30 $0C $03); doubles as colour 3.
+| PIXEL_CLEAR - the complement, to clear one pixel.
+D 9B80 9B87 byte 4
+L 9B88 PIXEL_MASK
+D 9B88 9B8F byte 4
+L 9B90 PIXEL_CLEAR
+D 9B90 9B93 byte 4

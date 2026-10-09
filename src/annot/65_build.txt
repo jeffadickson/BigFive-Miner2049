@@ -1,0 +1,505 @@
+############################################################ building a station, items
+L A53D BUILD_STATION
+H A53D
+| BUILD_STATION - show the "prepare for station" screen, then draw STATION from its
+| description and set everything up for play.
+|
+| STATION_TABLE (8 bytes per station, indexed by station number) gives the addresses of
+| four lists: ladders, slides, moving platforms and girders. Three more tables indexed by
+| station give Bob's start position and the transporter column, and two word tables
+| give the item list and the mutant list. Stations with machinery (6, 8, 9, 10) get extra
+| set-up code.
+C A53D prepare screen (also builds the empty game screen)
+C A540 X = station * 8
+C A542
+C A543
+C A544
+C A545
+L A546 BS_FILLER
+C A546 two instructions with no effect (5 bytes of filler; $4C is the JMP opcode,
+C A548   so this may be space reserved for a patch)
+C A54B ladder list
+C A54E
+C A550
+C A553
+C A555 slide list
+C A558
+C A55A
+C A55D
+C A55F moving-platform list
+C A562
+C A564
+C A567
+C A569 girder list (Y/X = lo/hi)
+C A56C
+C A56D
+C A570
+C A571 girders sloping down ...
+C A573
+C A576 ... sloping up ...
+C A578
+C A57B (lift x = 0: no lift)
+C A57D
+C A57F ... and flat
+C A582
+C A585
+C A588
+C A58B Bob's starting position
+C A58D
+C A590
+C A592
+C A595
+C A597 transporter column (0 = none)
+C A59A
+C A59D word tables: X = station * 2
+C A59F
+C A5A0
+C A5A1 mutant list
+C A5A4
+C A5A6
+C A5A9
+C A5AB item list
+C A5AE
+C A5B0
+C A5B3
+C A5B5 draw the items
+C A5B8 mask = $FF: copy the mutants ...
+C A5BA
+C A5BC
+C A5BE
+C A5C0 ... except on the credits screen (mask 0: no mutants)
+L A5C2 BS_MUTANTS
+C A5C2
+C A5C4
+C A5C6 8 mutant records
+C A5C8
+L A5CA BS_MUT_REC
+C A5CA 11 bytes each
+L A5CC BS_MUT_BYTE
+C A5CC
+C A5CE
+C A5D0
+C A5D3
+C A5D4
+C A5D5
+C A5D7 X = 0, so (pSKRES,x) reads RANDOM: a random colour, never too dark
+C A5D9
+C A5DB
+C A5DD byte 3 of the record just copied = current colour
+C A5E0 byte 1 = its normal colour
+C A5E3
+C A5E5
+C A5E7 station 6: the radioactive waste box
+C A5E9
+C A5EB
+C A5ED
+L A5F0 BS_SPECIAL
+C A5F0 credits screen: nothing more
+C A5F2
+C A5F4
+C A5F6
+L A5F9 BS_SPECIAL2
+C A5F9
+C A5FB station 8: the lift
+C A5FD
+C A5FF
+C A601 station 10: the cannon and the TNT store
+C A604
+L A607 BS_SPECIAL3
+C A607
+C A609
+C A60B station 9: the pulverizers
+L A60E BS_SPECIAL_DONE
+C A60E
+L A611 BS_LIFT
+C A611 station 8: the lift's cart (7 lines from LIFT_CART into player 3)
+L A613 BS_LIFT_CART
+C A613
+C A616
+C A619
+C A61A
+C A61C lift at x = $96, platform on line $A0
+C A61E
+C A620
+C A622
+C A624 colour 2 for its track
+C A626
+C A628 the scissor arms: P/M rows $A1-$B4 of player 3, from LIFT_SCISSOR
+C A62A
+L A62C BS_SCISSOR
+C A62C
+C A62F
+C A632
+C A633
+C A634
+C A636
+L A638 BS_SCISSOR_NEXT
+C A638
+C A63A
+C A63C animation phase it was left at
+C A63D
+C A63F two solid lines for the platform
+C A641
+C A644
+C A647 its track at x = $3A
+C A649
+L A64C BS_BONUS
+C A64C bonus "0000" on the status line
+C A64E
+L A650 BS_BONUS_ZERO
+C A650
+C A653
+C A654
+C A656 bonus (hundreds) = BONUS_BASE[station] + 5 * zone, at most 99
+C A658
+C A65B
+L A65D BS_BONUS_ADD
+C A65D
+C A65E
+C A660
+C A662
+C A663
+C A665
+C A667
+L A669 BS_BONUS_MAX
+C A669
+L A66B BS_BONUS_TENS
+C A66B tens digit
+C A66D
+C A66F
+C A670
+C A672
+C A675
+L A677 BS_BONUS_UNITS
+C A677 units digit (carry is clear: + $10)
+C A679
+L A67C BS_FLOOR
+C A67C bonus timer: first tick after 240 frames
+C A67E
+C A680 the bottom floor: one line, colour 3, the full 160 pixels
+C A682
+C A684
+C A686
+C A688
+C A68A
+C A68D carry on: colours, variables, NMIs
+L A690 LIFT_SCISSOR
+H A690
+| LIFT_SCISSOR - the lift's scissor arms: a 7-line cycle drawn down the lift's column of
+| player 3, starting at the phase LIFT_ANIM so the arms seem to fold and unfold.
+D A690 A696 gfx 7
+L A697 LIFT_CART
+H A697
+| LIFT_CART - the lift's cart (7 lines). Its last line, the wheels, is the first byte of
+| BONUS_BASE, which no station uses: the two tables overlap by one byte.
+D A697 A69C gfx 6
+L A69D BONUS_BASE
+H A69D
+| BONUS_BASE - starting bonus for each station, in hundreds, before adding 5 per zone.
+| Index 0 is the cart's wheels; station 10 reads one past the end, the $41 at the start
+| of TRANS_COLUMN (so its bonus starts at 6500 + 500 per zone).
+D A69D A6A6 byte 10
+L A6A7 TRANS_COLUMN
+H A6A7
+| TRANS_COLUMN - x of the transporter column per station (0 = none); stations 3 and 7.
+| (Station 11 reads one past the end: BOB_START_X's first byte, 0.)
+D A6A7 A6B1 byte 11
+L A6B2 BOB_START_X
+H A6B2
+| BOB_START_X / BOB_START_Y - where Bob starts on each station (index 1-11). Station 11
+| reads BOB_START_X one past the end, i.e. BOB_START_Y's unused first byte, $30.
+D A6B2 A6BC byte 11
+L A6BD BOB_START_Y
+D A6BD A6C8 byte 12
+L A6C9 SETUP_ITEMS
+H A6C9
+| SETUP_ITEMS - copy the station's items to ITEMS and draw them.
+| List entry: shape (bit 7 set = present), y, x (pixels). The shape number selects an
+| entry of ITEM_SHAPES: width, height, points, then the picture as whole bytes (4 pixels
+| per byte, 2 bits per pixel), copied straight into the bitmap. x is rounded down to a
+| multiple of 4 so items sit on byte boundaries.
+C A6C9
+L A6CB SI_LOOP
+C A6CB shape (0 = end of list)
+C A6CD
+C A6D0
+C A6D2
+C A6D4
+C A6D5
+L A6D6 SI_FILLER
+C A6D6 three instructions with no effect (8 bytes of filler)
+C A6D9
+C A6DB
+C A6DE address of the shape
+C A6E1
+C A6E3
+C A6E6
+C A6E8 y
+C A6E9
+C A6EB
+C A6EE line address
+C A6EF
+C A6F2
+C A6F4
+C A6F7
+C A6F9 x, rounded to a byte
+C A6FA
+C A6FC
+C A6FE
+C A701
+C A702
+C A704 + x/4
+C A707 copy the picture
+C A70A
+C A70C
+L A70E BLIT_SHAPE
+H A70E
+| BLIT_SHAPE - copy the item picture at (CNT3) to the bitmap at (CNT0), byte by byte.
+C A70E width in pixels -> bytes
+C A710
+C A712
+C A715 height
+C A716
+C A718
+C A71A skip the points byte
+C A71B
+L A71C BL_LINE
+C A71C
+C A71E
+C A720
+L A722 BL_BYTE
+C A722
+C A724
+C A726
+C A728
+C A72A
+C A72C
+C A72E
+C A72F
+C A730
+C A732 next line
+C A735
+L A737 BL_RTS
+C A737
+L A738 ITEM_ADDR
+H A738
+| ITEM_ADDR - CNT0/CNT1 = bitmap address of item X (offset into ITEMS).
+| ADD_X_BYTES adds A/4 to CNT0.
+C A738 line
+C A73B
+C A73C
+C A73F
+C A741
+C A744
+C A746 + x/4
+L A749 ADD_X_BYTES
+C A749
+C A74A
+C A74B
+C A74C
+C A74E
+C A750
+L A752 AXB_STORE
+C A752
+C A754
+L A755 WIDTH_BYTES
+H A755
+| WIDTH_BYTES - PLOT_Y = number of bytes covering A pixels = (A - 1) / 4 + 1.
+C A755
+C A756
+C A758
+C A759
+C A75A
+C A75B
+C A75D
+C A75F
+L A760 NEXT_LINE_PTR
+H A760
+| NEXT_LINE_PTR - CNT0/CNT1 += 40 (one bitmap line), CNT2 -= 1.
+C A760
+C A762
+C A763
+C A765
+C A767
+C A769
+L A76B NLP_COUNT
+C A76B
+C A76D
+L A76E UPDATE_ITEMS
+H A76E
+| UPDATE_ITEMS - every frame (from GAME_VBI): pick up items Bob touches.
+| ITEMS[n+0]: bit 7 set = item present. When Bob touches it, the item is replaced by its
+| points value ("100" .. "500", "1100" for the BF logo), the score goes up by
+| points x 100, mutants become edible (ITEM_GOT), and the byte becomes a countdown from
+| $55: while it runs a falling whistle plays on voice 4; at 1 the points are erased.
+| On station 10 the points of a TNT bundle are also added to the charge (1-3 tons).
+| On station 5 the goblet (shape $21) is poisoned: touching it kills Bob.
+C A76E a meaningless sequence: compares a ROM byte with itself minus 5 and ignores the
+C A770   result; the NOPs suggest a check that was patched out
+C A772
+C A774
+C A776
+C A777
+C A778
+C A77A
+C A77C
+C A77D
+L A77E UI_START
+C A77E
+L A780 UI_LOOP
+C A780 0 = end of list
+C A783
+C A785
+L A786 UI_ENTRY
+C A786 present?
+C A788 counting down after a pick-up
+C A789
+C A78B (stays at 1 = gone)
+C A78D
+C A790 at 1: erase the points
+C A792
+C A794
+L A797 UI_WHISTLE
+C A797 the whistle (not after the station is cleared)
+C A799
+C A79B
+C A79D only during the first 31 frames
+C A79E
+C A7A0
+C A7A2
+C A7A4 pitch falls as the count goes down
+C A7A5
+C A7A6
+C A7A7
+C A7A9
+C A7AB
+C A7AC
+C A7AE
+C A7B0 pure tone, volume 8
+L A7B2 UI_VOL
+C A7B2
+C A7B3
+C A7B5
+L A7B7 UI_NEXT
+C A7B7 next item
+C A7B8
+C A7B9
+C A7BA
+L A7BC UI_PRESENT
+C A7BC not while Bob is dying or in the transporter
+C A7BE
+C A7C0
+C A7C2
+C A7C4 shape
+C A7C6
+C A7C9 horizontal: centre of the item within 8 of Bob's x?
+C A7CB
+C A7CD
+C A7CE
+C A7CF
+C A7D2
+C A7D4
+C A7D5
+C A7D7
+C A7D9
+C A7DB vertical: does Bob's body overlap the item's lines?
+C A7DC
+C A7DE
+C A7DF
+C A7E2
+C A7E4
+C A7E6
+C A7E8
+C A7EA
+C A7EC
+C A7EE
+C A7F0
+C A7F3
+C A7F5
+C A7F7
+C A7F9 touched: the goblet on station 5 kills
+C A7FC
+C A7FE
+C A800
+C A802
+C A804
+C A806 KILLED = 5
+L A808 UI_COLLECT
+C A808 start the countdown
+C A80A
+C A80D width, height and points of the shape
+C A80E
+C A810
+C A811
+C A812
+C A814
+C A815
+C A816
+C A818
+C A819 the points value is itself a shape number: draw it over the item
+C A81C
+C A81F
+C A822 station 10: TNT bundles add their tons
+C A824
+C A826
+C A828
+C A829
+C A82A
+C A82B
+C A82D
+L A82F UI_SCORE
+C A82F score += points * 100 (digit 4 = hundreds)
+C A830
+C A832 and the mutants turn edible
+C A834
+C A837 height
+C A838
+C A839 width
+C A83A taller than the 5-line number? erase the rest of the item below it
+C A83C
+C A83E
+C A841
+C A842
+C A843
+L A845 CLEAR_BLOCK
+C A845 lines
+L A847 CB_LINE
+C A847
+C A849
+C A84B
+L A84C CB_BYTE
+C A84C
+C A84E
+C A84F
+C A850
+C A852
+C A855
+L A857 CB_RTS
+C A857
+L A858 UI_ERASE_POINTS
+C A858 erase the 3-byte, 5-line points number
+C A859
+C A85A
+C A85D
+C A85F
+C A861
+C A863
+C A866
+C A867
+C A868 whistle off (unless the station is over: the bonus count owns voice 4)
+C A86A
+C A86C
+C A86E
+C A86F
+L A871 UI_ERASE_DONE
+C A871
+L A874 SHAPE_ADDR
+H A874
+| SHAPE_ADDR - CNT3/CNT4 = address of item shape A.
+C A874
+C A875
+C A876
+C A879
+C A87B
+C A87E
+C A880

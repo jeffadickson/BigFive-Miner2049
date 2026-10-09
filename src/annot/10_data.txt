@@ -1,0 +1,123 @@
+############################################################ data: screens, text, keyboard, tables
+H -1
+|  MINER 2049er  -  Big Five Software, 1982.  Designed and programmed by Bill Hogue.
+|
+|  Commented disassembly of the 16K cartridge ROM ($8000-$BFFF).
+|  Assembles with ca65 (cc65 suite) to a byte-identical image:
+|      ca65 miner2049er.asm -o miner.o
+|      ld65 -C cart.cfg -o miner.rom miner.o
+|  with cart.cfg:
+|      MEMORY   { ROM: start=$8000, size=$4000, fill=yes, fillval=$FF, file=%O; }
+|      SEGMENTS { CODE: load=ROM, type=ro; }
+|
+|  The same ROM image runs on the Atari 400/800 and on the Atari 5200: see COLD_START.
+|  All names and comments are reconstructions from reading the code; nothing of the
+|  original source survives. Addresses in comments are hexadecimal.
+|
+|  Memory map
+|    $0000-$00FF  zero page: hardware pointer table ($10-$6F), game variables ($70-$FF)
+|    $0200-$0223  interrupt vectors (both machines' layouts are written)
+|    $0300-$07FF  player/missile graphics (single-line; PMBASE 3 = effectively 0)
+|                 $0300 missiles (mutants), $0400-$06FF Bob (players 0-2), $0700 mutants
+|    $0400-$043D  (on the high-score screen) the RAM copy of TITLE_KERNEL
+|    $0800-$08C7  high-score table, $08C8 text for the title screens
+|    $0917-$0991  text and display list for the prepare/name screens
+|    $0992-$09BF  items of the current station, $09C0-$0A17 mutant records
+|    $0A19-$0A24  pulverizers (station 9)
+|    $1C00-$1FFF  second P/M buffer for the high-score screen; 5200 font copy
+|    $2000-$20D7  game display list; $20D8 status line (40 characters)
+|    $2100-$3DBF  the playfield: 184 lines x 160 pixels, 4 colours (ANTIC mode E)
+|    $3DC0-$3F2F  bitmap line address tables (LINE_LO/LINE_HI = $3DB8/$3E70, indexed from
+|                 y = 8); $3F30 moving platforms
+|    $8000-$BFFF  this cartridge
+|
+|  Coordinates: horizontal positions use the P/M coordinate system (the playfield's left
+|  edge is 48 = $30); bitmap routines subtract $30 to get the pixel column (0-159).
+|  Vertical positions are bitmap lines 8-191 (line y is on scan line y + 32,
+|  which is also P/M row y + 32); Bob's BOB_Y is the top of
+|  his sprite and his feet are at BOB_Y + $15.
+|
+|  Data overlaps: to save ROM, many tables share bytes with their neighbours - the end of
+|  one list is the start of the next, a display list's jump address is also the first
+|  two characters of a text row, the cart's wheels are a bonus value, and so on. These
+|  are pointed out where they occur.
+L 8000 TITLE_DLIST
+H 8000
+| TITLE_DLIST - display list of the high-score screen. The JVB's address bytes ($801F)
+| are also the first two characters of the bottom row of lights (LMS $801F), so its
+| target ($1500) is nonsense - harmless, because TITLE_VBI reloads DLIST every frame.
+D 8000 8020 dlist
+C 8003 top row of lights: the "5"s at $8059, fine-scrolled
+C 8007 "HIGH SCORES:" (continues from the top row)
+C 800A the best score, in big letters
+C 800E high scores 2-10
+C 8018 "Press START For a 1 Miner Game"
+C 801B bottom row of lights (its data begins at $801F)
+D 8021 8032 byte 16
+C 8021 rest of the bottom row of lights: '5' ($15) with colour bits $40/$80/$C0
+L 8033 TITLE_TEXT
+H 8033
+| TITLE_TEXT - "Press START For a 1 Miner Game" (40 characters, copied to TEXT_RAM).
+| Its first bytes are also the end of the bottom row of lights.
+D 8033 805A text 10
+L 805B TOP_ROW
+H 805B
+| TOP_ROW - the top row of lights. ANTIC fetches 24 bytes from $8059 (the last two
+| characters of TITLE_TEXT are its first two), then "HIGH SCORES:" at $8071.
+D 805B 8070 byte 11
+D 8071 8084 text 10
+L 8085 TEXT_POOL
+H 8085
+| TEXT_POOL - strings drawn into the bitmap by DRAW_STRING (screen codes; TXT_IDX offsets):
+|   $00 DANGER  $06 Radioactive  $11 Waste  $16 MINER 2049er  $22 By  $24 Bill Hogue
+|   $2E Starring  $36 "Bounty Bob"  $42 Copyright (C)  $4F 1982 By  $56 Big Five Software
+|   $67 P.O. Box 9078-185  $78 Van Nuys Ca 91409  $89 (213) 782-6861  $97 Game Over
+|   $A0 Miner  $A5 TNT Charge=   0 Tons
+| The phone number at $810E is also the cheat code (CHEAT_CODE, see PHONE_CODE).
+D 8085 810D text 16
+L 810E PHONE_TEXT
+D 810E 810E text
+L 810F CHEAT_CODE
+D 810F 811B text 13
+D 811C 813D text 16
+L 813E NAME_TEXT
+H 813E
+| NAME_TEXT - the name-entry screen (copied to $0918): a 24-byte mode 7 line (fine
+| scrolled), then three 20-byte lines. Upper case with colour bits set = coloured text.
+D 813E 8155 text 12
+D 8156 8191 text 10
+L 8192 PREP_TEXT
+H 8192
+| PREP_TEXT - "MINER 1" / "prepare for" lines of the prepare screen (48 bytes copied to
+| $0918, starting one byte earlier at $8191), then the "STATION n" lines (from $81C2, or
+| $81C3 for station 10 so that the two digits stay centred) and "Zone" at $81F1.
+D 8192 81F0 text 16
+L 81F1 ZONE_TEXT
+D 81F1 81F4 text
+L 81F5 KEY_TO_SCREEN
+H 81F5
+| KEY_TO_SCREEN - 400/800 keyboard code (KBCODE and $3F) -> screen code; 0 = no character
+| (RETURN, DELETE, TAB ... are handled by code).
+D 81F5 822B byte 16
+L 822C SHIFT_MAP
+H 822C
+| SHIFT_MAP - for screen codes 1-27 (digits and punctuation, as SHIFT_MAP-1 indexed by
+| the code): the character SHIFT gives on that key ('1' -> '!', '2' -> '"' ...).
+| It starts inside KEY_TO_SCREEN.
+D 822C 8246 byte 16
+L 8507 STATION_TABLE
+H 8507
+| STATION_TABLE - per station (1-11), the addresses of its ladder, slide, moving-platform
+| and girder lists. Entry 0 is ITEM_SHAPES 33-36. The last entry's girder address is
+| also the first word of ITEM_LISTS.
+D 8507 8564 word 8
+L 8565 ITEM_LISTS
+H 8565
+| ITEM_LISTS - per station, the address of its item list.
+D 8565 857A word 12
+L 857B MUTANT_LISTS
+H 857B
+| MUTANT_LISTS - per station, the address of its 8 mutant records. Entry 11 (the credits)
+| is the first two bytes of MUTANT_SHAPES ($1E18): the 88 bytes there are read, but through
+| a mask of 0, so the credits get no mutants.
+D 857B 8592 word 12

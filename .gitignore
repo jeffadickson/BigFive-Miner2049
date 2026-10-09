@@ -1,0 +1,8 @@
+build/*
+!build/.gitkeep
+rom/*
+!rom/README.md
+shots/
+__pycache__/
+node_modules/
+book/docx/render/

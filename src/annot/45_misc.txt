@@ -1,0 +1,542 @@
+############################################################ pulverizers, game-over tune, transporters, text
+L 9B94 SETUP_PULVERIZERS
+H 9B94
+| SETUP_PULVERIZERS - station 9 ("The Pulverizers").
+| Draws the 3-line-thick beam the pulverizers hang from (lines $9D-$9F, x 40-131), gives
+| the four pulverizers a random starting delay, draws their heads in the raised position
+| (y = $A0), and draws the two 2-pixel posts at the ends of the frame.
+C 9B94 first line of the beam
+C 9B96
+C 9B98 3 lines thick
+C 9B9A
+C 9B9C colour 3
+C 9B9E
+L 9BA0 SP_BEAM
+C 9BA0 from x = 40 ...
+C 9BA2 ... 92 pixels long
+C 9BA4
+C 9BA7
+C 9BA9
+C 9BAB
+C 9BAD 4 pulverizers
+C 9BAF
+C 9BB1
+L 9BB3 SP_INIT
+C 9BB3 X = 4 here, so this reads (pSKRES) = RANDOM: random start delay
+C 9BB5
+C 9BB8 moving down when it starts
+C 9BBA
+C 9BBD at the top (y = $A0)
+C 9BBF
+C 9BC2 next 3-byte record
+C 9BC3
+C 9BC4
+C 9BC5
+C 9BC7
+C 9BC9 draw the four heads at byte columns $0B, $11, $17, $1D
+L 9BCB SP_HEADS
+C 9BCB
+C 9BCD
+C 9BCE
+C 9BCF
+C 9BD2
+C 9BD3
+C 9BD4
+C 9BD6
+C 9BD8
+C 9BDA the two posts, at pixel x = $28 and $82
+C 9BDC
+C 9BDF
+L 9BE1 DRAW_POST
+C 9BE1 2 pixels wide, 31 lines from y = $A0, colour 2
+C 9BE3
+C 9BE5
+C 9BE7
+C 9BE9
+C 9BEB
+C 9BED
+L 9BEF DP_LOOP
+C 9BEF
+C 9BF2
+C 9BF4
+C 9BF7
+C 9BF9
+C 9BFB
+C 9BFD
+L 9BFF DP_RTS
+C 9BFF
+L 9C00 PULV_SHAPE
+H 9C00
+| PULV_SHAPE - a pulverizer head, read backwards by DRAW_PULV: 6 lines of 3 bytes
+| (12 pixels). The top line is a thin rod: as the head moves down, each frame leaves
+| that line behind, so the rod grows from the beam. The blank bottom line erases the
+| head's old bottom line as it rises.
+D 9C00 9C11 gfx2 3
+L 9C12 DRAW_PULV
+H 9C12
+| DRAW_PULV - draw a pulverizer head with its top line at y = X, byte column Y.
+C 9C12 line address
+C 9C15
+C 9C17
+C 9C1A
+C 9C1C 18 bytes, last first
+L 9C1E DPV_LINE
+C 9C1E 3 bytes per line
+C 9C20
+L 9C22 DPV_BYTE
+C 9C22
+C 9C25
+C 9C27
+C 9C28
+C 9C29
+C 9C2B
+C 9C2D back to the first byte, next line
+C 9C2E
+C 9C2F
+C 9C30
+C 9C32
+C 9C33
+C 9C35
+C 9C37
+C 9C39
+L 9C3B DPV_NEXT
+C 9C3B
+C 9C3C
+C 9C3D
+C 9C3F
+L 9C40 MOVE_PULVERIZERS
+H 9C40
+| MOVE_PULVERIZERS - station 9, every frame. Each head waits, drops 22 lines to y = $B6,
+| rises back to $A0, then waits again. The wait gets shorter as the zone rises:
+|   delay = (18 - 2 * min(zone, 9)) * 8 + 40 frames
+C 9C40 only on station 9
+C 9C42
+C 9C44
+C 9C46 Y = byte column of the first head
+C 9C48
+L 9C4A MP_LOOP
+C 9C4A waiting?
+C 9C4D
+C 9C4F move by the direction (+1 / -1)
+C 9C52
+C 9C53
+C 9C56
+C 9C59 at the bottom: turn round
+C 9C5B
+C 9C5D back at the top?
+C 9C5F
+C 9C61 yes: moving down next time ...
+C 9C63
+C 9C66 ... after a delay that depends on the zone
+C 9C68
+C 9C6A
+C 9C6C
+L 9C6E MP_DELAY
+C 9C6E
+C 9C6F
+C 9C71
+C 9C73
+C 9C74
+C 9C76
+C 9C77
+C 9C78
+C 9C79
+C 9C7A
+C 9C7C
+C 9C7F redraw at the top
+C 9C81
+L 9C83 MP_BOTTOM
+C 9C83 direction = up
+C 9C85
+C 9C88
+L 9C8A MP_DRAW
+C 9C8A redraw the head at its new height
+C 9C8C
+C 9C8E
+C 9C8F
+C 9C92
+C 9C94
+C 9C96
+L 9C98 MP_WAIT
+C 9C98 count the delay down
+L 9C9B MP_NEXT
+C 9C9B next record and next column (+6 bytes = 24 pixels)
+C 9C9C
+C 9C9D
+C 9C9E
+C 9C9F
+C 9CA0
+C 9CA2
+C 9CA3
+C 9CA5
+L 9CA7 MP_RTS
+C 9CA7
+L 9CA8 GAME_OVER_TUNE
+H 9CA8
+| GAME_OVER_TUNE - plays "Oh My Darling, Clementine" ("...dwelt a miner, forty-niner")
+| three times: on voice 1, then on voice 2, then on both. START, the button, a digit key
+| or OPTION cuts it short; at the end the high-score screen appears.
+|
+| TUNE holds (note, length) pairs; a note is an AUDF1 divider (smaller = higher), $FE ends
+| a phrase and $FF the tune. Voice 2 does not read the table: its divider is worked out
+| from the melody note, (note - $1D) * 4 + $79 ($6C for note $1A), which puts it about
+| two octaves lower. Each note starts at volume 15 (pure tone, AUDC $AF), holds for
+| length+2 frames, then fades one step per frame to volume 6.
+C 9CA8 pass 1: voice 1 only
+L 9CAA GOT_PASS
+C 9CAA voice mask: 1 = voice 1, 2 = voice 2, 3 = both
+C 9CAC
+L 9CAE GOT_NOTE
+C 9CAE next byte of the tune
+C 9CB1 a note?
+C 9CB3 end of phrase: fade from volume 5 down to 0 ...
+L 9CB5 GOT_FADE
+C 9CB5
+C 9CB8 ... two frames per step
+C 9CBB
+C 9CBE
+C 9CBF
+C 9CC1
+C 9CC3 end of the tune?
+C 9CC6
+C 9CC8
+C 9CCA yes: 20 frames of silence
+L 9CCC GOT_REST
+C 9CCC
+C 9CCF
+C 9CD0
+C 9CD2 next pass
+C 9CD4
+C 9CD5
+C 9CD7
+C 9CD9 three passes played: the high-score screen
+L 9CDC GOT_PLAY
+C 9CDC melody on voice 1
+C 9CDE work out voice 2's note from the melody note
+C 9CE0
+C 9CE2
+C 9CE4
+L 9CE8 GOT_BASS
+C 9CE8
+C 9CE9
+C 9CEB
+C 9CEC
+C 9CED
+C 9CEE
+L 9CF0 GOT_SET2
+C 9CF0
+C 9CF2 attack: pure tone, volume 15
+C 9CF4
+C 9CF7 length
+C 9CF8
+C 9CFB + 2 frames
+C 9CFC
+C 9CFD
+L 9CFE GOT_HOLD
+C 9CFE
+C 9D01
+C 9D02
+C 9D04 decay: volume 14 down to 6, one per frame
+L 9D06 GOT_DECAY
+C 9D06
+C 9D09
+C 9D0C
+C 9D0D
+C 9D0F
+L 9D11 GOT_NEXT
+C 9D11
+C 9D12
+L 9D14 WAIT_FRAME_KEYS
+H 9D14
+| WAIT_FRAME_KEYS - wait for the next frame, checking OPTION, digit keys and START while
+| waiting. START/button/digit start a game at once (abandoning the caller).
+C 9D14 FRAMES changes once per frame
+C 9D16
+L 9D18 WFK_LOOP
+C 9D18
+C 9D19 OPTION: high-score screen
+C 9D1C digit: start in that zone
+C 9D1F START or button?
+C 9D22
+C 9D24
+L 9D27 WFK_WAIT
+C 9D27
+C 9D28
+C 9D2A
+C 9D2C
+C 9D2E
+L 9D2F SET_TUNE_VOL
+H 9D2F
+| SET_TUNE_VOL - write AUDC value Y to the voices selected in MOVE_B (bit 0 = voice 1,
+| bit 1 = voice 2).
+C 9D2F
+C 9D31
+C 9D32
+C 9D34
+C 9D35
+C 9D36
+C 9D38
+C 9D3A
+C 9D3B
+L 9D3C STV_VOICE2
+C 9D3C
+C 9D3D
+C 9D3F
+C 9D40
+C 9D42
+C 9D44
+L 9D45 STV_RTS
+C 9D45
+L 9D46 TUNE
+H 9D46
+| TUNE - Clementine: (POKEY divider, frames) pairs. $28 = C, $35 = G below it,
+| $1F = E, $1A = G, $1D = F, $23 = D, $2A = B: "In a cav-ern, in a can-yon,
+| ex-ca-vat-ing for a mine ..."
+D 9D46 9D83 byte 16
+L 9D84 DRAW_TRANSPORTER
+H 9D84
+| DRAW_TRANSPORTER - stations 3 and 7: draw the column of four numbered transporter
+| booths at x = A (SPECIAL_X; 0 = this station has none).
+| The digits 1-4 are drawn with the font renderer; the booths come from BOOTH_SHAPE,
+| each bit drawn as 2 pixels.
+C 9D84
+C 9D86
+C 9D88
+L 9D89 DT_DIGITS
+C 9D89 text x = column - $33
+C 9D8A
+C 9D8C
+C 9D8E colour 1, normal height
+C 9D90
+C 9D92
+C 9D93
+C 9D95
+C 9D97 first digit ('1') at the bottom, y = $9D
+C 9D99
+C 9D9B
+C 9D9D
+L 9D9F DT_DIGIT
+C 9D9F draw the digit
+C 9DA2 next booth up: 47 lines higher (DRAW_CHAR left y 8 lower)
+C 9DA4
+C 9DA5
+C 9DA7
+C 9DA9 digits '1' to '4'
+C 9DAB
+C 9DAD
+C 9DAF
+C 9DB1 4 booths
+C 9DB3
+C 9DB5 starting at y = 14
+C 9DB7
+L 9DB9 DT_BOOTH
+C 9DB9
+C 9DBB
+C 9DBD colour 1
+L 9DBF DT_RUN
+C 9DBF lines in this run (0 = booth done)
+C 9DC2
+C 9DC4
+C 9DC6
+C 9DC7
+L 9DC9 DT_LINE
+C 9DC9 x = column - $37
+C 9DCA
+C 9DCB
+C 9DCC
+C 9DCE
+C 9DD0 bit pattern for this run
+C 9DD3 8 bits
+C 9DD5
+L 9DD7 DT_BIT
+C 9DD7
+C 9DD8
+C 9DDA bit set: 2 pixels
+C 9DDB
+C 9DDE
+C 9DE0
+C 9DE2
+C 9DE3
+C 9DE6
+L 9DE7 DT_BIT_NEXT
+C 9DE7
+C 9DE9
+C 9DEB
+C 9DED
+C 9DEF next line
+C 9DF1
+C 9DF3
+C 9DF5
+C 9DF7
+C 9DF8
+L 9DFA DT_NEXT_BOOTH
+C 9DFA
+C 9DFC
+C 9DFE
+L 9DFF DRAW_CHAR
+H 9DFF
+| DRAW_CHAR - draw character A (screen code $00-$7F) into the bitmap from the machine's
+| ROM font, at TXT_X/TXT_Y, in colour TXT_COLOR, each font row repeated TXT_VSCALE
+| times. 1 bits are drawn in the ink colour and 0 bits are cleared, so text erases what
+| was under it. On return TXT_X is unchanged and TXT_Y has moved down 8 * TXT_VSCALE
+| lines; DRAW_STRING moves on to the next character position itself.
+| The font address is FONTPAGE*256 + A*8, so the 400/800 and the 5200 each use their own
+| ROM font.
+C 9DFF font page
+L 9E01 DC_PAGE
+C 9E01 32 characters per page of font
+C 9E03
+C 9E05
+C 9E06
+C 9E07
+C 9E09
+L 9E0C DC_FOUND
+C 9E0C
+C 9E0E
+C 9E10
+C 9E12 offset of the character in its page
+C 9E13
+C 9E14
+C 9E15
+C 9E17 8 font rows
+C 9E19
+C 9E1B
+L 9E1D DC_ROW
+C 9E1D repeat count for this row
+C 9E1E 8 pixels
+C 9E20
+C 9E22
+C 9E24
+L 9E26 DC_BIT
+C 9E26 next bit into carry
+C 9E27
+C 9E28
+C 9E2A 0 bit: draw it as background (TXT_COLOR 12) ...
+C 9E2C
+C 9E2E
+C 9E30
+C 9E31
+C 9E33
+C 9E35
+C 9E38
+C 9E39
+C 9E3B
+L 9E3E DC_INK
+C 9E3E 1 bit: ink
+L 9E41 DC_BIT_NEXT
+C 9E41
+C 9E43
+C 9E44
+C 9E46
+C 9E48 next line
+C 9E4A
+C 9E4C
+C 9E4D
+C 9E4F
+C 9E51 same font row again?
+C 9E52
+C 9E53
+C 9E55
+C 9E57 next font row
+C 9E59
+C 9E5B
+C 9E5D
+C 9E5F
+L 9E60 TXT_PLOT
+H 9E60
+| TXT_PLOT - PLOT for the text renderer: pixel (TXT_X - no offset, TXT_Y), colour
+| TXT_COLOR. Uses its own pointer (TXT_DST) so it can run inside other drawing.
+C 9E60
+C 9E62
+C 9E64
+C 9E67
+C 9E69
+C 9E6C
+C 9E6E
+C 9E6F
+C 9E71
+C 9E72
+C 9E73
+C 9E74
+C 9E75
+C 9E76
+C 9E79
+C 9E7B
+C 9E7C
+C 9E7D
+C 9E7E
+C 9E80
+C 9E81
+C 9E82
+C 9E85
+C 9E87
+L 9E88 BOOTH_SHAPE
+H 9E88
+| BOOTH_SHAPE - transporter booth as (lines, 8-bit pattern) runs, 0 = end:
+|   2 x 01111110   top of the number window
+|   8 x 01000010   sides of the window (the digit goes inside)
+|   1 x 01111110   bottom of the window
+|   2 x 11111111   roof
+|  23 x 10000001   walls
+|  11 x 00000000   gap to the next booth
+D 9E88 9E94 byte 16
+L 9E95 CHECK_OPTION
+H 9E95
+| CHECK_OPTION - OPTION (5200: the * key) abandons everything for the high-score screen.
+C 9E95
+C 9E97
+C 9E99
+C 9E9B
+C 9E9D
+L 9EA0 CO_800
+C 9EA0 OPTION = CONSOL bit 2
+C 9EA3
+L 9EA5 CO_CHK
+C 9EA5
+C 9EA7
+L 9EAA CHECK_START
+H 9EAA
+| CHECK_START - START (or the button, during the demo) pressed?
+| Out: carry set = start a new game (DEMO_PTR+1 is set to 0 on the way).
+| CHECK_START_ANY skips the "only during the demo" test. START_DLY makes sure START has
+| been released for a few frames first.
+C 9EAA in a real game only START counts
+C 9EAC
+L 9EAE CHECK_START_ANY
+C 9EAE the button counts too (not on the 5200)
+C 9EB0
+C 9EB2
+C 9EB4
+C 9EB6
+C 9EB8
+L 9EBA CS_START
+C 9EBA
+C 9EBC
+L 9EBE CS_5200
+C 9EBE 5200 START key
+C 9EC0
+C 9EC2
+L 9EC5 CS_800
+C 9EC5 400/800 START key
+C 9EC8
+L 9ECA CS_CHK
+C 9ECA
+C 9ECC not pressed: count the release time
+C 9ECE
+C 9ED0
+L 9ED2 CS_NO
+C 9ED2
+C 9ED3
+L 9ED4 CS_PRESSED
+C 9ED4 forget the key
+C 9ED6
+C 9ED8 released long enough before?
+C 9EDA
+C 9EDC no: start the release count again
+C 9EDE
+C 9EE0
+L 9EE2 CS_YES
+C 9EE2 A = 0: DEMO_PTR+1 = 0, a real game
+C 9EE4
+L 9EE5 CS_RTS
+C 9EE5

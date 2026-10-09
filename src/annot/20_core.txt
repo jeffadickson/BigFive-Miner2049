@@ -1,0 +1,165 @@
+############################################################ interrupt plumbing and input
+L 91F1 SET_VBI
+H 91F1
+| SET_VBI - install a vertical-blank interrupt handler.            In: Y/X = handler lo/hi
+|
+| The same cartridge runs on the Atari 400/800 and on the Atari 5200, and the two
+| machines dispatch the VBI differently:
+|   * 400/800 OS: its NMI routine pushes A, X and Y, then jumps through VVBLKI ($0222).
+|   * 5200 BIOS:  jumps through its own VVBLKI ($0202) with nothing saved; Miner points that
+|                 at VBI_5200 below, which saves the registers and jumps through VVBLKD
+|                 ($0204), the 5200's deferred vector.
+| Writing the handler into both $0222 and $0204 means every handler can end with the same
+| PLA/TAY/PLA/TAX/PLA/RTI sequence (NMI_EXIT) on either machine.
+C 91F1 disable all NMIs while the vectors are half-written
+C 91F3 NMIEN = 0
+C 91F6 5200: deferred VBI vector = handler
+C 91F9
+C 91FC 400/800: VBI vector = handler
+C 91FF
+C 9202 5200: immediate VBI vector -> VBI_5200 ($9210)
+C 9204
+C 9207
+C 9209
+C 920C clear any pending NMI status (the value written is irrelevant)
+C 920F
+L 9210 VBI_5200
+H 9210
+| VBI_5200 - 5200 only: make the BIOS's bare VBI look like the 400/800 OS's.
+| Push A, X, Y exactly as the 400/800 OS does, then continue at the game's handler.
+C 9210 save A
+C 9211 save X
+C 9212
+C 9213 save Y
+C 9214
+C 9215 continue at the handler stored by SET_VBI
+L 9218 POLL_KEYS
+H 9218
+| POLL_KEYS - called at the start of every VBI handler. Reads a key if one was pressed.
+|
+| The game never enables POKEY interrupts. Instead it polls the keyboard bit (6) of IRQST
+| each frame: 0 there means a key has been latched in KBCODE. The key is stored in KEYCODE
+| and the IRQ status bit is re-armed by writing IRQEN 0 then $40.
+|   400/800: KEYCODE = raw KBCODE (keyboard matrix code, bit 6 = SHIFT, bit 7 = CTRL).
+|   5200:    the keypad code (bits 1-4) is translated through KEYPAD_MAP into the 400/800
+|            code of the same key, so the rest of the game sees a single keyboard. The
+|            keypad's RESET key maps to 0 and restarts the cartridge.
+C 9218 Y = 0 for the (pointer),Y register accesses
+C 921A read IRQST
+C 921C bit 6 = keyboard interrupt status (0 = key pressed)
+C 921E no key: return
+C 9220 read the key code
+C 9222 which machine?
+C 9224 400/800: keep the code as it is
+C 9226 5200 keypad code is in bits 1-4
+C 9227
+C 9228
+C 922A translate to a 400/800 key code
+C 922D 0 = RESET key: restart the cartridge
+L 922F STORE_KEY
+C 922F remember the key
+C 9231 IRQEN = 0 then $40: clears the keyboard status bit, ready for the next key
+C 9232
+C 9234
+C 9236
+L 9238 POLL_DONE
+C 9238
+L 9239 RESET_5200
+C 9239 restart through the cartridge's start vector (= RESTART: the high scores are kept)
+L 923C NMI_EXIT
+H 923C
+| NMI_EXIT - common tail of every interrupt handler: restore Y, X, A and return.
+C 923C
+C 923D restore Y
+C 923E
+C 923F restore X
+C 9240 restore A
+C 9241
+L 9242 KEYPAD_MAP
+H 9242
+| KEYPAD_MAP - 5200 keypad code (0-15) -> the 400/800 KBCODE the game expects.
+|   code:  0    1    2    3    4     5    6    7    8     9    A    B    C     D    E    F
+|   key:   -    #    0    *    RESET 9    8    7    PAUSE 6    5    4    START 3    2    1
+|   ->     $FF  $21  $32  $02  $00   $30  $35  $33  $1C   $1B  $1D  $18  $03   $1A  $1E  $1F
+| Digits map to the computer's digit keys, # to the space bar (runs the lift in station 8),
+| PAUSE to ESC (pause), * to $02 and START to $03 (the 5200 stand-ins for SELECT/OPTION and
+| START, see TITLE_LOOP). RESET maps to 0, which POLL_KEYS treats as "restart".
+D 9242 9251 byte 16
+L 9252 SET_DLI
+H 9252
+| SET_DLI - install a display-list-interrupt handler.             In: Y/X = handler lo/hi
+| Written to both the 400/800 vector (VDSLST) and the 5200 one ($0206).
+C 9252 5200 DLI vector
+C 9255
+C 9258 400/800 DLI vector
+C 925B
+C 925E
+L 925F READ_DIGIT
+H 925F
+| READ_DIGIT - was a digit key (1-9, 0) pressed?
+| Out: Z clear and A = Y = 1-10 if so ('0' counts as 10), and the key is consumed;
+|      Z set and Y = 0 if no key, or a key that is not a digit.
+| KEY_TO_SCREEN converts the key code to a screen code; digits are $10-$19.
+C 925F any key waiting?
+C 9261
+C 9263 no
+C 9265 drop SHIFT and CTRL
+C 9267
+C 9268 key code -> screen code
+C 926B screen code - $10 = digit value
+C 926C
+C 926E '0'
+C 9270 counts as 10
+L 9272 READ_DIGIT_CHK
+C 9272 not a digit at all?
+C 9274
+C 9276 consume the key
+C 9278
+C 927A Y = digit, Z clear
+C 927B
+L 927C NO_DIGIT
+C 927C Y = 0, Z set
+L 927E RD_RTS
+C 927E
+L 927F CHECK_ZONE_KEY
+H 927F
+| CHECK_ZONE_KEY - on the title screens a digit key starts a one-player game at that zone.
+| If a digit was pressed it is saved in START_ZONE and the game starts (via START_GAME_A
+| with A = 0, i.e. not a demo). Otherwise it simply returns.
+C 927F
+C 9282 no digit: return
+C 9284 zone to start in
+C 9286 A = 0: DEMO_PTR+1 = 0 = a real game
+C 9288 start the game
+L 928B HW_RESET
+H 928B
+| HW_RESET - silence and blank everything.
+| Writes 0 to every GTIA, POKEY and ANTIC register (256 times over, through the mirrors),
+| turns the POKEY keyboard status back on, forgets any key, selects the ROM font and sets
+| up the serial/keyboard control.
+C 928B no NMIs
+C 928D
+C 9290 Y = 0
+L 9291 HW_RESET_LOOP
+C 9291 GTIA register Y (mirrored every 32 bytes)
+C 9293 POKEY register Y (mirrored every 16 bytes)
+C 9295 ANTIC register Y: DMA off, display list, scroll, NMIEN ...
+C 9298
+C 9299 256 bytes
+C 929B IRQEN = $40: allow the keyboard status bit
+C 929D
+C 929F KEYCODE = none
+C 92A1
+C 92A3 character set = the machine's ROM font
+C 92A5
+C 92A8
+C 92AA 400/800:
+C 92AC 5200: CONSOL bit 2 enables the controller ports' pot scanning
+C 92AE
+C 92B0 5200: SKCTL = 2 (keyboard debounce off)
+C 92B2
+L 92B4 HW_RESET_800
+C 92B4 400/800: SKCTL = 3 (keyboard scan + debounce enabled)
+L 92B6 HW_RESET_SKCTL
+C 92B6
+C 92B8

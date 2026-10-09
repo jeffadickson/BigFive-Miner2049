@@ -1,0 +1,4 @@
+Miner 2049er (c) 1982 Big Five Software. The game, its code and its graphics belong to
+their rights holders. This repository is an independent study of the cartridge; it is
+not affiliated with or endorsed by them. The cartridge image is not included: rom/
+holds only a README, and `make` checks the rebuilt binary against a SHA-256.

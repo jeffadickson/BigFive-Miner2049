@@ -1,0 +1,585 @@
+############################################################ power-up, main loop, turns, high scores
+L A1B5 COLD_START
+H A1B5
+| COLD_START - power-up / RESET entry (cartridge init vector at $BFFE).
+|
+| The cartridge's option byte ($BFFD) is $FF. On the 400/800 its bit 7 makes this a
+| "diagnostic" cartridge: the OS jumps here straight after RESET, before initialising
+| anything, so the game owns the whole machine. On the 5200 the same $FF tells the BIOS
+| to skip its title screen and jump through the same address. One ROM image therefore
+| boots on both machines, and the code below works out which one it is on:
+|
+|   $F800-$F80F all $00 or $18?  -> those are the first two glyphs (space and '!') of the
+|   5200 BIOS font, so this is a 5200. On the 400/800 that address holds OS code.
+|
+| It then builds the hardware pointer table at $10-$6F:
+|   $10+2r -> GTIA register r     ($D000+r on the 400/800, $C000+r on the 5200)
+|   $50+2r -> POKEY register r    ($D200+r on the 400/800, $E800+r on the 5200)
+| and from then on every GTIA/POKEY access goes "LDA (pTRIG0),Y"-style through it. ANTIC
+| sits at $D400 on both machines and is addressed directly.
+C A1B5 starting zone 1
+C A1B7
+C A1B9 Y = 0
+C A1BA no NMIs
+C A1BD no IRQs
+C A1BE no DMA
+C A1C1 phone-number code: nothing typed yet
+C A1C3
+C A1C4 look at $F800-$F80F
+L A1C6 PWR_DETECT
+C A1C6
+C A1C9
+C A1CB
+C A1CD something else: a 400/800
+L A1CF PWR_DETECT_NEXT
+C A1CF
+C A1D0
+C A1D2 5200: there is no warm-start flag, so force "cold" (clear the high scores)
+C A1D4 Y = 1
+L A1D5 PWR_MACHINE
+C A1D5
+C A1D6 0 = 400/800, 1 = 5200
+C A1D8
+C A1DA 5200: GTIA page $C0, POKEY page $E8, font at $F800
+C A1DC
+C A1DE
+C A1E0
+L A1E2 PWR_800
+C A1E2 400/800: GTIA page $D0, POKEY page $D2, font at $E000
+C A1E4
+C A1E6
+L A1E8 PWR_TABLE
+C A1E8
+C A1EA
+C A1EB 32 pointers to GTIA registers 0-31 at $10-$4F
+C A1ED
+L A1EE PWR_GTIA
+C A1EE
+C A1F0
+C A1F2
+C A1F3
+C A1F5
+C A1F6
+C A1F7
+C A1F9
+C A1FB 16 pointers to POKEY registers 0-15 at $50-$6F
+C A1FC
+C A1FD
+L A1FF PWR_POKEY
+C A1FF
+C A201
+C A203
+C A204
+C A206
+C A207
+C A208
+C A20A
+C A20C power-on (not RESET): clear the high-score table
+C A20E
+C A210
+L A212 PWR_CLEAR_HI
+C A212
+C A215
+C A216
+C A218 three NOPs: room left for a patch
+C A219
+C A21A
+L A21B PWR_TEXT
+C A21B copy "Press START For a 1 Miner Game" to TEXT_RAM
+L A21D PWR_TEXT_LOOP
+C A21D
+C A220
+C A223
+C A224
+C A226 one player
+L A228 RESTART
+H A228
+| RESTART - the cartridge's start address ($BFFA). Starts the attract sequence: the
+| opening credits on station 11, played from the DEMO_CREDITS recording.
+C A228
+C A22B fresh player variables
+C A22E station 11 = the credits screen
+C A230
+C A232 recording 2 (DEMO_CREDITS)
+L A234 SET_DEMO
+C A234
+C A237
+C A239
+C A23C
+L A23E PLAY_STATION
+H A23E
+| PLAY_STATION - build STATION and run it until the turn ends.
+C A23E
+C A241 build the station (prepare screen, drawing, start-up)
+C A244 the credits screen has its own loop
+C A246
+C A248
+C A24A
+L A24D GAME_LOOP
+H A24D
+| GAME_LOOP - foreground loop while a station is played. All the action happens in the
+| vertical-blank interrupt (GAME_VBI); this loop only watches the keys and waits for the
+| turn to end (ALIVE = 0) or the station's end-of-station wipe to finish (WIPE_LINE = 0).
+C A24D turn over?
+C A24F
+C A251 demo: a digit key starts a real game
+C A253
+C A255
+L A258 GL_KEYS
+C A258 station 10: show the TNT charge
+C A25B
+C A25D
+C A25F OPTION -> high-score screen (400/800)
+L A262 GL_START
+C A262 START (or the button during the demo) -> new game
+C A265
+C A267
+L A26A GL_WIPE
+C A26A station cleared and the screen wiped away?
+C A26C
+C A26E next station: NMIs off (A = 0)
+C A271
+C A272
+C A274 after station 10 ...
+C A276
+C A278 ... back to station 1 of the next zone
+C A27A
+C A27B
+C A27D (the zone stops at 255)
+C A27F
+L A281 GL_STATION
+C A281
+C A283 demo: back to the credits
+C A285
+C A287
+L A28A TURN_OVER
+H A28A
+| TURN_OVER - Bob has died. If that was his last life, show "Game Over / Miner n" in a
+| box with a little siren of sound; then hand over to the next player, or end the game.
+C A28A lives left?
+C A28C
+C A28E
+L A291 GAME_OVER_BOX
+C A291 fill a box (x 40-119, lines $5C-$6B) in colour 3, column by column
+C A293
+C A295
+C A298
+C A29A
+C A29C voices 1 and 2: pure tone, volume 15 (X = 8 makes these AUDC1/AUDC2)
+C A29E
+C A2A0
+L A2A2 GOB_COLUMN
+C A2A2
+C A2A4
+C A2A6 one column per frame
+L A2A8 GOB_WAIT
+C A2A8
+C A2AA
+L A2AC GOB_PIXEL
+C A2AC two tones that rise with the column
+C A2AE
+C A2AF
+C A2B1
+C A2B3
+C A2B5
+C A2B7
+C A2B9
+C A2BC status line stops blinking
+C A2BE
+C A2C1
+C A2C2
+C A2C4
+C A2C6
+C A2C8
+C A2CA
+C A2CC
+C A2CE
+C A2D0
+C A2D2
+C A2D4 silence voice 2; voice 1 to a low hum
+C A2D6
+C A2D7
+C A2D9
+C A2DB
+C A2DD
+C A2DF
+C A2E1
+C A2E3
+C A2E5
+C A2E7 text in the background colour, cut into the box
+C A2E9
+C A2EB "Game Over" (TEXT_POOL + $97)
+C A2ED
+C A2EF
+C A2F1
+C A2F3
+C A2F5
+C A2F7
+C A2F9
+C A2FC "Miner" below it
+C A2FE
+C A300
+C A302
+C A305 then the player's number
+C A307
+C A309
+C A30A
+C A30B
+C A30E
+C A311 wait 3 seconds while the hum fades
+C A313
+C A315
+L A316 GOB_FADE
+C A316
+L A318 GOB_FADE_WAIT
+C A318
+C A31A
+C A31C every 4 frames ...
+C A31E
+C A320
+C A322
+C A324 ... one step quieter (down to volume 0)
+C A326
+C A328
+C A32A
+C A32B
+C A32D
+C A32F
+C A331
+L A333 GOB_FADE_NEXT
+C A333
+C A335
+L A337 TURN_NEXT
+C A337
+C A33A
+L A33D NEXT_PLAYER
+H A33D
+| NEXT_PLAYER - after a turn: in the demo go back to the credits; in a two-player game
+| swap to the other player if he has lives left; otherwise carry on, or if nobody has
+| lives left, enter the high scores and show the high-score screen.
+C A33D demo?
+C A33F
+C A341
+L A344 NP_REAL
+C A344 the other player still in the game?
+C A347
+C A349 swap STATION..SCORE ($B7-$C0) with the other player's copy ($C1-$CA)
+L A34B NP_SWAP
+C A34B
+C A34D
+C A350
+C A352
+C A355
+C A356
+C A358 PLAYER = 1 - PLAYER
+C A35A
+C A35B
+C A35D
+L A35F NP_GO
+C A35F a life will be taken when the turn starts
+C A361
+C A363
+L A364 NP_ALONE
+C A364 this player still has lives?
+C A366
+C A368 everybody is out: high-score table ...
+C A36B ... and the high-score screen
+L A36E CREDITS_LOOP
+H A36E
+| CREDITS_LOOP - station 11, the opening credits. The credits ("MINER 2049er / By /
+| Bill Hogue / Starring "Bounty Bob" / Copyright (C) 1982 By / Big Five Software / ...
+| (213) 782-6861") were drawn at the start in pixel colour 1, whose colour register is
+| black, so they are invisible. As Bob (driven by DEMO_CREDITS) walks along the girders,
+| GAME_VBI repaints every colour-1 pixel in a band around him in colour 2, so the words
+| appear in his wake. When he reaches the bottom right corner the rest is revealed, a
+| DLI rainbow starts on the copyright lines, and the game-over tune plays.
+C A36E
+C A370
+L A372 CL_LOOP
+C A372 digit: start a game in that zone
+C A375 START or the button: start a game
+C A378
+C A37A
+L A37D CL_WAIT
+C A37D OPTION: high-score screen
+C A380 has Bob reached the bottom right?
+C A382
+C A384
+C A386
+C A388
+C A38A
+C A38C wait until the beam is half way down the screen
+C A38F
+C A391
+C A393 stop the VBI, footsteps off
+C A395
+C A396
+C A399
+C A39B colour 1 = the revealed-text colour: everything not yet uncovered appears ...
+C A39D
+C A39F ... and the credits are drawn again on top
+C A3A2 colour for the rainbow DLI
+C A3A4
+C A3A6
+C A3A8
+C A3AA DLI = DLI_RAINBOW
+C A3AC
+C A3AE
+C A3B1 DLI only (no VBI)
+C A3B3
+C A3B6 play Clementine, then the high-score screen
+L A3B9 ST_RTS
+C A3B9
+L A3BA SHOW_TNT
+H A3BA
+| SHOW_TNT - station 10: print the TNT charge ("TNT Charge=  nn Tons") on the status
+| text, and print "DANGER" (at pixel $48, line $35) once 4 or more tons are loaded.
+C A3BA
+C A3BC
+C A3BE
+C A3C0 station finished?
+C A3C2
+C A3C4 4 tons or more?
+C A3C6
+C A3C8
+C A3CA "DANGER" in colour 2 at ($48, $35)
+C A3CC
+C A3CE
+C A3D0
+C A3D2
+C A3D3
+C A3D5
+C A3D7
+C A3D9
+C A3DB
+L A3DE ST_NUMBER
+C A3DE colour 1
+C A3E0
+C A3E2 fired, or nothing loaded: show 0
+C A3E4
+C A3E6
+C A3E8
+C A3EA
+C A3EC tens and units
+L A3EE ST_TENS
+C A3EE
+C A3F0
+C A3F2
+C A3F4
+C A3F5
+L A3F7 ST_DIGITS
+C A3F7
+C A3F8 tens digit (blank if 0)
+C A3F9
+C A3FB
+C A3FC
+L A3FE ST_TENS_OUT
+C A3FE
+C A401 units digit
+C A402
+C A403
+L A405 ST_UNITS
+C A405 at x = $68
+L A407 ST_DRAW
+C A407
+C A409 y = 13
+C A40B
+C A40D
+L A410 ST_ZERO
+C A410 "0"
+C A412
+C A415 and a blank tens digit
+L A417 ST_TENS_X
+C A417 at x = $60
+C A419
+L A41B INIT_PLAYERS
+H A41B
+| INIT_PLAYERS - both players to station 1, zone 1, 3 lives, extra life pending, score 0
+| (from PLAYER_INIT). In a one-player game player 2 gets no lives.
+C A41B
+L A41D IP_LOOP
+C A41D
+C A420
+C A422
+C A425
+C A426
+C A428 player 1 first
+C A42A
+C A42C
+C A42E
+C A430 one player: the other player has no lives
+L A433 IP_RTS
+C A433
+L A434 PLAYER_INIT
+H A434
+| PLAYER_INIT - STATION, ZONE, LIVES, XLIFE, SCORE (6 digits).
+D A434 A43D byte
+L A43E HISCORE_CHECK
+H A43E
+| HISCORE_CHECK - after a game, offer the high-score table to both players' scores,
+| the higher score first (so the two never compete for the same slot out of order).
+C A43E screen off
+C A440
+C A443
+C A444
+C A447
+C A449 players to x = 0 (off screen)
+C A44C Y = 10 = player 2's offset if his score is higher
+C A44E
+L A450 HC_COMPARE
+C A450 compare the two scores digit by digit
+C A452
+C A454
+C A456
+C A458
+C A459
+C A45B
+L A45D HC_P1
+C A45D player 1 is higher
+L A45F HC_ORDER
+C A45F
+C A461 the higher score ...
+C A464 ... then the other one
+C A466
+C A467
+C A469
+C A46B
+L A46E INSERT_SCORE
+H A46E
+| INSERT_SCORE - put the score at SCORE+CNT1(=PTR) (player 1: offset 0, player 2: 10)
+| into the high-score table if it beats an entry, and ask for a name.
+| Table lines are 20 screen-code characters; the score sits at columns 11-17 as
+| "nnn,nnn" with leading zeros blank. The top line is shown in ANTIC mode 7, whose
+| characters carry their colour in bits 6-7, so its digits are $50-$59, not $10-$19.
+C A46E
+C A470 a score of zero is never entered
+C A472
+L A474 IS_ZERO
+C A474
+C A476
+C A477
+C A478
+C A47A
+C A47C
+C A47E line 0 digits are $50-$59
+C A480
+C A482 10 lines
+C A484
+C A486
+L A488 IS_LINE
+C A488
+C A48A
+C A48B 6 digits
+C A48D
+C A48F
+L A491 IS_DIGIT
+C A491 table digit (blank counts as 0)
+C A494
+C A495
+C A497
+C A499
+C A49B
+L A49D IS_CMP
+C A49D
+C A49F the new score is higher: insert here
+C A4A1 lower: try the next line
+C A4A3 equal: next digit
+C A4A4
+C A4A5
+C A4A7
+C A4A9
+C A4AB
+C A4AD
+C A4AF skip the comma
+C A4B0
+L A4B2 IS_NEXT_LINE
+C A4B2 lines 1-9 use plain digits
+C A4B4
+C A4B6
+C A4B7
+C A4B8
+C A4BB
+C A4BD
+L A4BF IS_RTS
+C A4BF
+L A4C0 IS_INSERT
+C A4C0 move the lines below down by one (20 bytes)
+C A4C2
+C A4C3
+C A4C5
+C A4C7
+C A4C8
+L A4CA IS_MOVE
+C A4CA
+C A4CD
+C A4D0
+C A4D1
+C A4D2
+L A4D4 IS_CLEAR
+C A4D4 clear the new line
+C A4D6
+C A4D8
+L A4DA IS_CLEAR_LOOP
+C A4DA
+C A4DD
+C A4DE
+C A4DF
+C A4E1 write the score into it
+C A4E3
+C A4E5
+C A4E7
+C A4E9 no digit written yet (leading zeros stay blank)
+C A4EB
+L A4ED IS_WRITE
+C A4ED
+C A4EF
+C A4F1
+C A4F3
+C A4F5
+L A4F7 IS_DIGIT_OUT
+C A4F7 digit -> screen code
+C A4F8
+C A4FA
+C A4FD
+L A4FF IS_WRITE_NEXT
+C A4FF
+C A500
+C A501
+C A503
+C A505 after 3 digits: comma (if any digit has been written)
+C A507
+C A509
+C A50B
+C A50D
+C A50F
+L A511 IS_COMMA
+C A511
+C A514
+C A515
+L A517 IS_NAME
+C A517
+C A518
+C A519 ask for the name
+C A51C
+C A51D new top score?
+C A51E
+C A520 yes: line 0 to the mode 7 colour ...
+L A522 IS_RECOLOUR0
+C A522
+C A525
+C A526
+C A528
+C A52B
+C A52C
+C A52E ... and the old top line, now line 1, back to plain codes
+L A530 IS_RECOLOUR1
+C A530
+C A533
+C A534
+C A536
+C A539
+C A53A
+L A53C IS_RTS2
+C A53C
+O A212 HISCORES-1,x
+O A220 TEXT_RAM-1,x

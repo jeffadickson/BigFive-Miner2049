@@ -1,0 +1,813 @@
+############################################################ high-score screen ("title screen")
+# title-screen use of the $B0-$CA area (the player variables are dead while it runs)
+= T_SCROLL $B0 ; title: fine-scroll phase now showing (0-15)
+= T_TMP    $B1 ; title: scratch (also the operand of the kernel's delay instruction)
+= T_NEWSCROLL $B2 ; title: scroll phase the main loop wants shown next
+= T_PTR    $B3 ; title: (2) pointer into the RAM kernel / PM memory
+= T_CNT    $B5 ; title: scratch counter
+= T_CNT2   $B6 ; title: scratch counter
+= T_LINE   $B7 ; title: which display-list interrupt is next
+= T_ROT    $B8 ; title: colour rotation of the chasing lights (0-9)
+= T_HUE    $B9 ; title: start of the rainbow on the high-score lines
+= T_TEXTCOL $BA ; title: colour of "HIGH SCORES:" (pulsing)
+= T_TEXTSTEP $BB ; title: +1/-1 brightness step for T_TEXTCOL
+= T_TIMER30 $BC ; title: 30-frame timer (changes every frame)
+= T_TIMER14 $BD ; title: 14-frame timer for the rainbow
+= T_INVERSE $BE ; title: CHACTL value (blinks "START" in inverse video)
+= T_PMPAGE $BF ; title: PM buffer being drawn ($1C or $04)
+= T_PMPTR  $C0 ; title: (2) pointer into the back PM buffer
+= T_NEXT   $C2 ; title: next scroll phase
+= T_TIMER4 $C3 ; title: 4-frame timer for the text pulsing
+= T_COLIX  $C4 ; title: colour index for the rainbow DLI
+= T_SELDLY $C5 ; title: SELECT debounce
+= T_STARTDLY $C6 ; title: START debounce (START must be released first)
+= T_TIMER60 $C7 ; title: 60-frame timer
+= T_DEMOSEC $C8 ; title: seconds left before the demo starts
+= T_TIMER11 $C9 ; title: 11-frame timer for the background tone
+= T_VOLUME $CA ; title: AUDC1 value of the fading background tone
+S 92B9 9767 $B0 T_SCROLL
+S 92B9 9767 $B1 T_TMP
+S 92B9 9767 $B2 T_NEWSCROLL
+S 92B9 9767 $B3 T_PTR
+S 92B9 9767 $B5 T_CNT
+S 92B9 9767 $B6 T_CNT2
+S 92B9 9767 $B7 T_LINE
+S 92B9 9767 $B8 T_ROT
+S 92B9 9767 $B9 T_HUE
+S 92B9 9767 $BA T_TEXTCOL
+S 92B9 9767 $BB T_TEXTSTEP
+S 92B9 9767 $BC T_TIMER30
+S 92B9 9767 $BD T_TIMER14
+S 92B9 9767 $BE T_INVERSE
+S 92B9 9767 $BF T_PMPAGE
+S 92B9 9767 $C0 T_PMPTR
+S 92B9 9767 $C2 T_NEXT
+S 92B9 9767 $C3 T_TIMER4
+S 92B9 9767 $C4 T_COLIX
+S 92B9 9767 $C5 T_SELDLY
+S 92B9 9767 $C6 T_STARTDLY
+S 92B9 9767 $C7 T_TIMER60
+S 92B9 9767 $C8 T_DEMOSEC
+S 92B9 9767 $C9 T_TIMER11
+S 92B9 9767 $CA T_VOLUME
+
+L 92B9 TITLE_SCREEN
+H 92B9
+| TITLE_SCREEN - the high-score screen with its ring of "chasing lights".
+|
+| Reached after a game ends, after the game-over tune, or by pressing OPTION. It shows the
+| ten best scores inside a frame of 36 '5' characters (taken from the ROM font) whose
+| colours march round the frame. The tricks that make it work:
+|
+|  * Top and bottom rows: one ANTIC mode 7 line each (20 big characters), held in ROM at
+|    $8059 and $801F. The text never moves. HSCROL slides the row by 0-15 colour clocks
+|    (two character cells), and each time the scroll wraps the colours rotate one step, so
+|    the eye sees a continuous march.
+|  * Ten colours on one line: mode 7 gives only four colours (COLPF0-3). A display list
+|    interrupt jumps into TITLE_KERNEL, a cycle-counted loop copied to RAM at $0400 that
+|    rewrites all four colour registers twice on every scan line: once for the left four
+|    '5's and once, half-way across, for the right four. The middle two '5's are players
+|    1 and 2, which have their own colour registers. 4 + 2 + 4 = 10 colours.
+|  * The kernel must follow the fine scroll, so the two delay instructions (KERNEL_DELAY1
+|    before the loop, KERNEL_DELAY2 in it) are patched to a 3-, 4- or 5-cycle opcode (CPX zp / CMP zp,X / ASL zp) to move the colour changes
+|    by 6-10 colour clocks. Its STA instructions also get their high bytes (by
+|    KERNEL_COLS_TOP only, since both halves share the kernel) patched to the
+|    GTIA's page, because GTIA is at $D0xx on the 400/800 but at $C0xx on the 5200.
+|  * Left and right columns: players 0 and 3 in double-line resolution. A DLI on every text
+|    line recolours them. They move by redrawing into a second P/M buffer and flipping
+|    PMBASE between $0400 and $1C00 (double buffering), so no half-drawn frame is seen.
+|  * The ten high-score lines get a moving rainbow (one DLI per line), "HIGH SCORES:"
+|    pulses in brightness, and "START" blinks in inverse video.
+|
+| While it runs it watches for START or the joystick button (start a game), SELECT (one or
+| two players), a digit key (start in that zone), and after 30 seconds starts the demo.
+C 92B9 everything off and silent
+C 92BC number of players shown in "Press START For a 1 Miner Game":
+C 92BE   '1' + TWO_PLAYER
+C 92BF
+C 92C1   the digit sits at TEXT_RAM+23
+C 92C4 copy the 27 title variables T_SCROLL..T_VOLUME from TITLE_INIT
+L 92C6 TS_INIT_LOOP
+C 92C6
+C 92C9
+C 92CB
+C 92CC
+C 92CE clear both P/M buffers
+C 92D1 put the middle top/bottom '5's into players 1 and 2
+C 92D4 draw the side columns into the first buffer
+C 92D7 next buffer to draw into is $1C00
+C 92D9
+C 92DB copy the 62-byte colour kernel to RAM at $0400 (it is self-modified)
+L 92DD TS_COPY_KERNEL
+C 92DD
+C 92E0
+C 92E3
+C 92E4
+C 92E6 first DLI = DLI_TOP_ROW
+C 92E8
+C 92EA
+C 92ED show P/M buffer $0400 (double-line players: base+$200..$3FF)
+C 92EF
+C 92F2
+C 92F4 left column (player 0) at x = $30
+C 92F6
+C 92F8 right column (player 3) at x = $C8
+C 92FA
+C 92FC VBI = TITLE_VBI
+C 92FE
+C 9300
+C 9303 enable DLI and VBI
+C 9305
+L 9308 TITLE_LOOP
+C 9308 wait until the VBI has shown the scroll phase asked for last time
+C 930A
+C 930C
+C 930D
+C 930E 4 frames per scroll step
+L 9310 TS_FRAME
+C 9310 T_TIMER30 changes every frame: remember it to spot the next frame
+L 9312 TS_POLL
+C 9312
+C 9313 a digit key starts a game in that zone
+C 9316 START: 5200 keypad START arrives as key code 3
+C 9318
+C 931A
+C 931C
+C 931E
+L 9321 TS_START_800
+C 9321 400/800: START key (CONSOL bit 0, 0 = pressed)
+C 9324
+C 9326 pressed
+C 9328 ... or the joystick button
+C 932A
+C 932C
+L 932E TS_START_CHK
+C 932E not pressed
+C 9330 forget any key
+C 9332
+L 9334 TS_START_PRESSED
+C 9334 START must have been released for a few frames first
+C 9336 it was: start a game (A = 0 = not a demo)
+C 9338 still held from before: keep waiting
+C 933A
+C 933C
+L 933E TS_DEMO
+C 933E A = 1: run the demo instead
+L 9340 START_GAME_A
+H 9340
+| START_GAME_A - start a game. A = 0 for a real game, A <> 0 for the demo (it becomes
+| DEMO_PTR+1 and is replaced by the real pointer in START_GAME).
+C 9340
+C 9342
+L 9345 TS_NO_START
+C 9345 count the START debounce down while START is up
+C 9347
+C 9349
+L 934B TS_CHECK_DEMO
+C 934B 30 seconds gone? then show the demo
+C 934D
+C 934F SELECT: on the 5200 the * key (code 2)
+C 9351
+C 9353
+C 9355
+C 9357
+L 935A TS_SELECT_800
+C 935A 400/800: SELECT key
+C 935D
+L 935F TS_SELECT_CHK
+C 935F not pressed
+C 9361 forget any key
+C 9363
+C 9365 only act on a new press
+C 9367
+C 9369 TWO_PLAYER = 1 - TWO_PLAYER
+C 936B
+C 936C
+C 936E
+C 9370 and update the digit on screen
+C 9371
+C 9373
+L 9376 TS_SELECT_HELD
+C 9376 hold-off while SELECT stays down
+C 9378
+L 937A TS_SELECT_UP
+C 937A
+C 937C
+C 937E
+L 9380 TS_NEXT_FRAME
+C 9380 has a frame gone by?
+C 9381
+C 9383 no: keep polling
+C 9385 4 frames?
+C 9386
+C 9388 next scroll phase = (T_SCROLL + 2) and 15
+C 938A
+C 938B
+C 938D
+C 938F
+C 9391 draw the side columns for it in the hidden buffer
+C 9394 flip buffers: $1C <-> $04
+C 9396
+C 9397
+C 9399
+C 939B ask the VBI to show it
+C 939D
+C 939F
+L 93A2 TS_POLL_J
+C 93A2
+L 93A5 TS_FRAME_J
+C 93A5
+L 93A8 SET_FINE_SCROLL
+H 93A8
+| SET_FINE_SCROLL - set HSCROL and patch the kernel's delay to match.     In: A = 0-15
+| A/2 = 0     -> $E4 CPX zp      (3 cycles)
+| A/2 = 1-4   -> $D5 CMP zp,X    (4 cycles)
+| A/2 = 5-7   -> $06 ASL zp      (5 cycles; shifts T_TMP, which is harmless)
+| The opcode goes into both delay slots of TITLE_KERNEL.
+C 93A8 fine scroll
+C 93AB
+C 93AD
+C 93AE
+C 93B0
+C 93B2
+C 93B4
+C 93B6
+L 93B8 SFS_PATCH
+C 93B8 patch the delay opcode inside the loop
+C 93BB ... and the one before the first line
+C 93BE
+L 93BF CLEAR_PM_BUFS
+H 93BF
+| CLEAR_PM_BUFS - zero 1K at $0400 and 1K at $1C00 (the two P/M buffers).
+C 93BF $0400
+C 93C1
+C 93C3
+C 93C5
+C 93C7 count $FC00 up to $10000 = 1024 bytes
+C 93C9
+C 93CB
+C 93CE $1C00
+C 93D0
+C 93D2
+C 93D4
+C 93D6
+C 93D8
+L 93DA CLEAR_MEM
+H 93DA
+| CLEAR_MEM - zero memory from (T_PTR) for -(T_CNT) bytes.     In: X/Y = negative count hi/lo
+C 93DA
+C 93DC
+C 93DE
+C 93E0
+L 93E1 CLEAR_MEM_LOOP
+C 93E1
+C 93E3 advance the pointer
+C 93E5
+C 93E7
+L 93E9 CLEAR_MEM_CNT
+C 93E9 count up to zero
+C 93EB
+C 93ED
+C 93EF
+C 93F1
+L 93F2 DRAW_MID_FIVES
+H 93F2
+| DRAW_MID_FIVES - copy the '5' glyph from the ROM font into players 1 and 2 of both P/M
+| buffers, at the heights of the top and bottom rows. These are the two middle lights of
+| each row (they need colours of their own; see TITLE_SCREEN).
+C 93F2 T_PTR = font + 8 * $15 = the '5' glyph
+C 93F4
+C 93F6
+C 93F8
+C 93FA player 1, top row
+C 93FC
+C 93FF player 1, bottom row
+C 9401
+C 9404 player 2, top row
+C 9406
+C 9409 player 2, bottom row
+L 940B COPY_GLYPH
+C 940B 6 rows (glyph rows 1-6)
+L 940D COPY_GLYPH_LOOP
+C 940D
+C 940F buffer at $0400 (players at $0600-$07FF)
+C 9412 buffer at $1C00
+C 9415
+C 9416
+C 9417
+C 9419
+L 941A DRAW_COLUMNS
+H 941A
+| DRAW_COLUMNS - draw the left and right columns of '5's into the hidden P/M buffer for
+| scroll phase T_NEXT. The right column (player 3) is drawn from the bottom up shifted one
+| way, the left column (player 0) shifted the other way, so the lights run round the frame.
+| Each column is: a blank gap, then glyphs separated by 8-line gaps.
+C 941A T_PMPTR = hidden buffer + $380 = player 3 (right column)
+C 941C
+C 941E
+C 9420
+C 9421
+C 9422
+C 9423
+C 9425 start at the bottom line of the player
+C 9427 blank gap of 15 - phase lines
+C 9429
+C 942A
+C 942C
+C 942D
+C 9430 phase 0: glyph first
+C 9432
+C 9434
+C 9437
+L 9439 DC_GLYPH1
+C 9439
+L 943C DC_REST1
+C 943C
+C 943F five more glyph+gap pairs
+C 9442 phase >= 8: one more glyph else a gap
+C 9444
+C 9446
+C 9448
+C 944B
+L 944D DC_GAP1
+C 944D
+L 9450 DC_LEFT
+C 9450
+C 9453 T_PMPTR = hidden buffer + $200 = player 0 (left column)
+C 9455
+C 9457
+C 9459
+C 945B blank gap of phase+1 lines
+C 945D
+C 945E
+C 9461 phase >= 10: glyph else gap
+C 9463
+C 9465
+C 9467
+C 946A
+L 946C DC_GAP2
+C 946C
+L 946F DC_REST2
+C 946F
+C 9472 five glyph+gap pairs
+C 9475 and a final 16-line gap
+C 9477
+L 9479 DC_FIVE_PAIRS
+C 9479 5 times: glyph then gap
+C 947B
+L 947D DC_PAIR
+C 947D
+C 9480
+C 9483
+C 9485
+C 9487
+L 9488 DC_GAP8
+C 9488 8 blank lines
+L 948A DC_GAP
+C 948A X blank lines, going up
+L 948C DC_GAP_LOOP
+C 948C
+C 948E
+C 948F
+C 9490
+C 9492
+L 9493 DC_GLYPH
+C 9493 8 lines of the '5' glyph from the machine's ROM font
+C 9495
+C 9497
+L 9499 DC_GLYPH_800
+C 9499 400/800 font at $E000
+C 949C
+C 949E
+C 949F
+C 94A0
+C 94A2
+L 94A3 DC_GLYPH_5200
+C 94A3 5200 font at $F800
+C 94A6
+C 94A8
+C 94A9
+C 94AA
+C 94AC
+L 94AD TITLE_VBI
+H 94AD
+| TITLE_VBI - vertical blank on the high-score screen.
+| Shows the scroll phase / P/M buffer the main loop prepared, rotates the colours when the
+| scroll wraps, pulses "HIGH SCORES:", moves the rainbow, blinks "START", counts down to
+| the demo and plays a soft repeating tone.
+C 94AD read the keyboard
+C 94B0 display list at $8000 (in ROM)
+C 94B2
+C 94B5
+C 94B7
+C 94BA DMACTL: normal playfield, players on, double-line, display list on
+C 94BC
+C 94BF GRACTL: player DMA on
+C 94C1
+C 94C3 new scroll phase requested?
+C 94C5
+C 94C7
+C 94C9 yes: take it
+C 94CB show the buffer just drawn (the other one of $1C/$04)
+C 94CD
+C 94CE
+C 94D0
+C 94D2 scroll wrapped to 0?
+C 94D5
+C 94D7 rotate the colours one light along
+C 94D9
+C 94DB
+C 94DD
+L 94DF TV_RECOLOUR
+C 94DF load the new colours into the kernel for the top row
+L 94E2 TV_SCROLL
+C 94E2 fine scroll (and kernel delay) for the top row
+C 94E4
+C 94E7 every 4 frames step the brightness of "HIGH SCORES:"
+C 94E9
+C 94EB
+C 94ED
+C 94EF brightness 2 or 12 ends a sweep
+C 94F1
+C 94F3
+C 94F5
+C 94F7
+C 94F9
+C 94FB
+L 94FD TV_NEXT_HUE
+C 94FD at the dark end move to the next hue
+C 94FF
+C 9500
+C 9502
+L 9504 TV_TURN
+C 9504 reverse the brightness step
+C 9506
+C 9507
+C 9509
+L 950B TV_STEP
+C 950B
+C 950D
+C 950E
+C 9510
+L 9512 TV_RAINBOW
+C 9512 every 14 frames move the rainbow start (15 colours)
+C 9514
+C 9516
+C 9518
+C 951A
+C 951C
+C 951D
+C 951F
+C 9521
+L 9523 TV_RAIN_STORE
+C 9523
+L 9525 TV_RAIN_SET
+C 9525 the DLIs count T_COLIX down from here, line by line
+C 9527 every 30 frames toggle inverse video ("START" blinks)
+C 9529
+C 952B
+C 952D
+C 952F
+C 9531
+C 9532
+C 9534
+C 9536
+L 9539 TV_SECONDS
+C 9539 every 60 frames count a second off the demo timer
+C 953B
+C 953D
+C 953F
+C 9541
+L 9543 TV_TONE
+C 9543 every 11 frames lower the tone's volume one step
+C 9545
+C 9547
+C 9549
+C 954B
+C 954D
+C 954E volume wraps from 0 back to 15 (distortion 6)
+C 9550
+C 9552
+L 9554 TV_TONE_SET
+C 9554
+C 9555
+C 9557
+C 9559
+C 955B
+C 955D
+L 955F TV_EXIT
+C 955F
+L 9562 SET_MIDDLE_PLAYERS
+H 9562
+| SET_MIDDLE_PLAYERS - put players 1 and 2 (the two middle lights) at A and A+16, and
+| point T_PTR at the kernel's first colour operand. Returns T_CNT = 8 colours to load.
+C 9562
+C 9564
+C 9566
+C 9567
+C 9569
+C 956B T_PTR = $0406 = first "LDA #" operand in the RAM kernel
+C 956D
+C 956F
+C 9571
+C 9573 8 colour writes per line
+C 9575
+C 9577
+C 9578
+L 9579 KERNEL_COLS_TOP
+H 9579
+| KERNEL_COLS_TOP - load the top row's colours into the RAM kernel.
+| The eight "LDA #colour" operands get eight consecutive colours from the ten-colour ring
+| CHASE_COLOURS (starting at T_ROT); the two middle players get the other two. The high
+| byte of each "STA COLPFn" is rewritten with the GTIA page taken from the pointer table
+| (pHPOSP0+1 = $D0 or $C0), so the same kernel works on the 400/800 and the 5200.
+C 9579 middle players follow the scroll
+C 957B
+C 957C
+C 957E
+C 9581 colour index = 9 + rotation
+C 9583
+C 9585
+C 9586 operands at +$23, +$1E ... +$00 (5 bytes per LDA/STA pair)
+C 9588 phase 8-15 shifts a light into the gap: blank it
+C 958A
+C 958C
+C 958E
+C 9590
+L 9592 KCT_LOOP
+C 9592 next colour of the ring
+L 9595 KCT_STORE
+C 9595 patch "LDA #colour"
+C 9597 GTIA page ($D0 or $C0)
+C 9599
+C 959A
+C 959B
+C 959C patch the high byte of "STA COLPFn"
+C 959E
+C 959F
+C 95A0
+C 95A1 previous LDA/STA pair
+C 95A2
+C 95A3
+C 95A5
+C 95A6
+C 95A7 at the half-way point skip the two players' colours
+C 95A9
+C 95AB
+C 95AC
+L 95AD KCT_NEXT
+C 95AD
+C 95AF
+C 95B1 the two middle players
+C 95B3
+C 95B6
+C 95B8
+C 95BA
+C 95BD
+C 95BF and the colour shared by the two side columns
+C 95C2
+C 95C4
+C 95C6
+L 95C7 KERNEL_COLS_BOTTOM
+H 95C7
+| KERNEL_COLS_BOTTOM - as KERNEL_COLS_TOP but for the bottom row, which scrolls the other
+| way: players at $68 + (16 - phase), colours taken in the opposite order.
+C 95C7
+C 95C9
+C 95CA
+C 95CC
+C 95CE
+C 95CF
+C 95D1
+C 95D4
+C 95D6
+C 95D8
+C 95D9
+C 95DB
+C 95DD
+L 95DE KCB_START
+C 95DE
+C 95E0
+C 95E2
+C 95E4
+C 95E6
+L 95E8 KCB_LOOP
+C 95E8
+L 95EB KCB_STORE
+C 95EB patch "LDA #colour"
+C 95ED next pair, going forwards this time
+C 95EE
+C 95EF
+C 95F1
+C 95F2
+C 95F3
+C 95F5
+C 95F7
+C 95F8
+L 95F9 KCB_NEXT
+C 95F9
+C 95FB
+C 95FD the two middle players
+C 95FE
+C 95FF
+C 9601
+C 9602
+C 9605
+C 9607
+C 9609
+C 960C
+C 960E
+L 960F DLI_TOP_ROW
+H 960F
+| DLI_TOP_ROW - display list interrupt just above the top (and the bottom) row of lights.
+| Runs the colour kernel for the 12 scan lines of the mode 7 row.
+C 960F save A, X, Y
+C 9610
+C 9611
+C 9612
+C 9613
+C 9614
+C 9616
+C 9619 bottom row at phase 0: give player 3 its colour
+C 961B
+C 961D
+C 961F
+C 9621
+C 9623
+C 9626
+L 9628 DTR_GO
+C 9628 start on a fresh line
+C 962B 12 scan lines
+C 962D into the RAM kernel
+L 9630 TITLE_KERNEL
+H 9630
+| TITLE_KERNEL - copied to RAM at $0400 and run there (the code below is assembled for
+| $0400). Cycle-counted: after the first WSYNC each pass, plus the cycles ANTIC
+| steals for DMA, is meant to fill one scan line; the delays tune it to the fine scroll.
+| The "LDA #" operands are patched by KERNEL_COLS_TOP/BOTTOM (the STA high bytes by
+| KERNEL_COLS_TOP alone), and
+| the two delay opcodes by SET_FINE_SCROLL.
+C 9630 wait for the start of the next line
+L 9633 KERNEL_DELAY1
+C 9633 delay: CPX/CMP,X/ASL = 3/4/5 cycles (patched)
+L 9635 KERNEL_LINE
+C 9635 colours for the left group of lights
+C 9637
+C 963A
+C 963C
+C 963F
+C 9641
+C 9644
+C 9646
+C 9649 colours for the right group of lights
+C 964B
+C 964E
+C 9650
+C 9653
+C 9655
+C 9658
+C 965A
+C 965D padding: 6 cycles each
+C 965F
+C 9661
+L 9663 KERNEL_DELAY2
+C 9663 delay (patched like KERNEL_DELAY1)
+C 9665 12 lines?
+C 9666
+C 9668 next line (no WSYNC in the loop: its timing is counted)
+L 966B KERNEL_DONE
+C 966B back to the cartridge
+L 966E DLI_AFTER_ROW
+H 966E
+| DLI_AFTER_ROW - continues after the kernel. After the top row: colour the
+| "HIGH SCORES:" line and arm DLI_TEXT_LINES. After the bottom row: prepare the top row's
+| colours for the next frame.
+C 966E top row or bottom row?
+C 9670
+C 9672 top row done: "HIGH SCORES:" colour
+C 9674
+C 9676 next DLI = DLI_TEXT_LINES
+C 9678
+C 967A
+C 967D
+C 967F
+C 9681
+C 9682
+C 9684
+L 9686 DAR_BOTTOM
+C 9686 bottom row done: start over
+C 9688
+C 968A colours for next frame's top row
+L 968D DAR_EXIT
+C 968D
+L 9690 DLI_TEXT_LINES
+H 9690
+| DLI_TEXT_LINES - one DLI per text line between the two rows. It colours the two '5's of
+| the side columns that share this band (COLPM0 left, COLPM3 right) and gives each
+| high-score line the next rainbow colour. After the 16th it switches back to
+| DLI_TOP_ROW for the bottom row and prepares the kernel for it.
+C 9690 save A, X, Y
+C 9691
+C 9692
+C 9693
+C 9694
+C 9695
+C 9697 which light (if any) is level with this line?
+C 9699
+C 969C
+C 969F none
+C 96A1 phase 10-15: lights have moved a slot
+C 96A3
+C 96A5
+C 96A7
+C 96A9
+C 96AB
+C 96AD
+C 96AF
+C 96B1
+L 96B3 DTL_LOW
+C 96B3
+C 96B5
+C 96B7
+C 96B9
+L 96BB DTL_COLOUR
+C 96BB colour of the left light
+C 96BD
+C 96BE
+C 96C0
+C 96C1
+C 96C4
+C 96C6 colour of the right light (the ring runs the other way)
+C 96C8
+C 96C9
+C 96CB
+C 96CC
+C 96CE
+C 96D0
+C 96D1
+C 96D4
+L 96D6 DTL_RAINBOW
+C 96D6 the "HIGH SCORES:" line is not rainbowed
+C 96D8
+C 96DA
+C 96DC next rainbow colour (index counts down, 15 colours)
+C 96DE
+C 96DF
+C 96E1
+C 96E3
+L 96E5 DTL_RAIN_SET
+C 96E5
+C 96E7
+C 96E8
+C 96EB
+L 96ED DTL_NEXT
+C 96ED the "Press START" line is white
+C 96EF
+C 96F1
+C 96F3
+C 96F5
+L 96F7 DTL_COUNT
+C 96F7
+C 96F9 16 lines done?
+C 96FB
+C 96FD
+C 96FF yes: next DLI is DLI_TOP_ROW again, for the bottom row
+C 9701
+C 9703
+C 9706 the bottom row scrolls the other way: 16 - phase
+C 9708
+C 9709
+C 970B
+C 970D
+C 9710 colours for the bottom row
+L 9713 DTL_EXIT
+C 9713
+L 9716 CHASE_COLOURS
+H 9716
+| CHASE_COLOURS - the ten colours of the chasing lights, repeated so that any run of ten
+| can be read from any start. Each value is hue (high nibble) and brightness (low nibble).
+D 9716 972D byte 10
+L 972E LIGHT_ROW
+H 972E
+| LIGHT_ROW - for each title DLI line: which light of the side columns sits in it
+| (0 = none). Values above 10 belong to the second half of the scroll.
+D 972E 973D byte 16
+L 973E RAINBOW
+H 973E
+| RAINBOW - 15 colours for the high-score lines.
+D 973E 974C byte 15
+L 974D TITLE_INIT
+H 974D
+| TITLE_INIT - starting values for T_SCROLL ($B0) .. T_VOLUME ($CA).
+D 974D 9767 byte 14
+O 92C9 T_SCROLL-1,x
+O 92E6 #>DLI_TOP_ROW
+O 92E8 #<DLI_TOP_ROW
+O 92FC #<TITLE_VBI
+O 92FE #>TITLE_VBI
+O 9676 #>DLI_TEXT_LINES
+O 9678 #<DLI_TEXT_LINES
+O 96FF #<DLI_TOP_ROW
+O 9701 #>DLI_TOP_ROW
+O 93B8 KERNEL_DELAY2
+O 93BB KERNEL_DELAY1

@@ -1,0 +1,9 @@
+Copyright (c) 2026 Jeffrey Dickson. All rights reserved.
+
+Covers the book and the art: the text in book/chapters/ and book/docx/content.md,
+the Word book in book/docx/, the commentary (names, comments and explanations) in
+src/miner2049er.asm and src/annot/, the figures in book/fig/, and the rendered page,
+pictures and movies in web/out/. No part may be reproduced or distributed without
+written permission, except for brief quotation with attribution.
+
+Source: https://github.com/jeffadickson/BigFive-Miner2049

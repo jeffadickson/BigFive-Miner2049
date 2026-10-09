@@ -1,0 +1,349 @@
+############################################################ data: station descriptions (generated layout)
+L 8619 EMPTY_LIST
+H 8619
+| EMPTY_LIST - the 0 that ends station 1's item list doubles as "no ladders / slides /
+| platforms" for the stations that have none.
+L 8DF4 LADDERS_1
+H 8DF4
+| station 1 (The Mine Shaft) ladders: height, x, y, style
+D 8DF4 8E0F byte 4
+D 8E10 8E10 byte 1
+C 8E10 end of list
+L 8607 ITEMLIST_1
+H 8607
+| station 1 (The Mine Shaft) items: shape (+$80), y, x
+D 8607 8618 byte 3
+D 8619 8619 byte 1
+C 8619 end of list
+L 8DCD GIRDERS_1
+H 8DCD
+| station 1 (The Mine Shaft) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8DCD 8DD5 byte 3
+D 8DD6 8DD6 byte 1
+C 8DD6 end of the down-sloping girders
+D 8DD7 8DE2 byte 3
+D 8DE3 8DE3 byte 1
+C 8DE3 end of the up-sloping girders
+D 8DE4 8DF2 byte 3
+D 8DF3 8DF3 byte 1
+C 8DF3 end of the flat girders
+L 8A67 MUTANTS_1
+H 8A67
+| station 1 (The Mine Shaft) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8A67 8ABE byte 11
+L 8E31 LADDERS_2
+H 8E31
+| station 2 (The Slides) ladders: height, x, y, style
+D 8E31 8E50 byte 4
+D 8E51 8E51 byte 1
+C 8E51 end of list
+L 8E52 SLIDES_2
+H 8E52
+| station 2 (The Slides) slides: rows, x, y, step
+D 8E52 8E6D byte 4
+D 8E6E 8E6E byte 1
+C 8E6E end of list
+L 861A ITEMLIST_2
+H 861A
+| station 2 (The Slides) items: shape (+$80), y, x
+D 861A 862E byte 3
+D 862F 862F byte 1
+C 862F end of list
+L 8E10 GIRDERS_2
+H 8E10
+| station 2 (The Slides) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8E10 8E10 byte 1
+C 8E10 end of the down-sloping girders
+D 8E11 8E11 byte 1
+C 8E11 end of the up-sloping girders
+D 8E12 8E2F byte 3
+D 8E30 8E30 byte 1
+C 8E30 end of the flat girders
+L 8ABF MUTANTS_2
+H 8ABF
+| station 2 (The Slides) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8ABF 8B16 byte 11
+L 8E92 LADDERS_3
+H 8E92
+| station 3 (The Transporters) ladders: height, x, y, style
+D 8E92 8EAD byte 4
+D 8EAE 8EAE byte 1
+C 8EAE end of list
+L 8630 ITEMLIST_3
+H 8630
+| station 3 (The Transporters) items: shape (+$80), y, x
+D 8630 8641 byte 3
+D 8642 8642 byte 1
+C 8642 end of list
+L 8E6E GIRDERS_3
+H 8E6E
+| station 3 (The Transporters) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8E6E 8E6E byte 1
+C 8E6E end of the down-sloping girders
+D 8E6F 8E6F byte 1
+C 8E6F end of the up-sloping girders
+D 8E70 8E90 byte 3
+D 8E91 8E91 byte 1
+C 8E91 end of the flat girders
+L 8B17 MUTANTS_3
+H 8B17
+| station 3 (The Transporters) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8B17 8B6E byte 11
+L 8F06 LADDERS_4
+H 8F06
+| station 4 (The Lillipads) ladders: height, x, y, style
+D 8F06 8F11 byte 4
+D 8F12 8F12 byte 1
+C 8F12 end of list
+L 8643 ITEMLIST_4
+H 8643
+| station 4 (The Lillipads) items: shape (+$80), y, x
+D 8643 865A byte 3
+D 865B 865B byte 1
+C 865B end of list
+L 8EAF GIRDERS_4
+H 8EAF
+| station 4 (The Lillipads) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8EAF 8EAF byte 1
+C 8EAF end of the down-sloping girders
+D 8EB0 8EB0 byte 1
+C 8EB0 end of the up-sloping girders
+D 8EB1 8F04 byte 3
+D 8F05 8F05 byte 1
+C 8F05 end of the flat girders
+L 8B6F MUTANTS_4
+H 8B6F
+| station 4 (The Lillipads) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8B6F 8BC6 byte 11
+L 8F8D SLIDES_5
+H 8F8D
+| station 5 (Advanced Lillipads) slides: rows, x, y, step
+D 8F8D 8FB0 byte 4
+D 8FB1 8FB1 byte 1
+C 8FB1 end of list
+L 8FB2 LIFTS_5
+H 8FB2
+| station 5 (Advanced Lillipads) moving platforms: timer, width, x, y, travel, speed
+D 8FB2 8FC3 byte 6
+D 8FC4 8FC4 byte 1
+C 8FC4 end of list
+L 865C ITEMLIST_5
+H 865C
+| station 5 (Advanced Lillipads) items: shape (+$80), y, x
+D 865C 8670 byte 3
+D 8671 8671 byte 1
+C 8671 end of list
+L 8F12 GIRDERS_5
+H 8F12
+| station 5 (Advanced Lillipads) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8F12 8F12 byte 1
+C 8F12 end of the down-sloping girders
+D 8F13 8F13 byte 1
+C 8F13 end of the up-sloping girders
+D 8F14 8F8B byte 3
+D 8F8C 8F8C byte 1
+C 8F8C end of the flat girders
+L 8BC7 MUTANTS_5
+H 8BC7
+| station 5 (Advanced Lillipads) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8BC7 8C1E byte 11
+L 9018 LADDERS_6
+H 9018
+| station 6 (Radioactive Waste) ladders: height, x, y, style
+D 9018 901F byte 4
+D 9020 9020 byte 1
+C 9020 end of list
+L 9021 LIFTS_6
+H 9021
+| station 6 (Radioactive Waste) moving platforms: timer, width, x, y, travel, speed
+D 9021 9026 byte 6
+D 9027 9027 byte 1
+C 9027 end of list
+L 8672 ITEMLIST_6
+H 8672
+| station 6 (Radioactive Waste) items: shape (+$80), y, x
+D 8672 8686 byte 3
+D 8687 8687 byte 1
+C 8687 end of list
+L 8FC4 GIRDERS_6
+H 8FC4
+| station 6 (Radioactive Waste) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 8FC4 8FC4 byte 1
+C 8FC4 end of the down-sloping girders
+D 8FC5 8FC5 byte 1
+C 8FC5 end of the up-sloping girders
+D 8FC6 9016 byte 3
+D 9017 9017 byte 1
+C 9017 end of the flat girders
+L 8C1F MUTANTS_6
+H 8C1F
+| station 6 (Radioactive Waste) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8C1F 8C76 byte 11
+L 908C SLIDES_7
+H 908C
+| station 7 (Advanced Transporters) slides: rows, x, y, step
+D 908C 90AF byte 4
+D 90B0 90B0 byte 1
+C 90B0 end of list
+L 9073 LIFTS_7
+H 9073
+| station 7 (Advanced Transporters) moving platforms: timer, width, x, y, travel, speed
+D 9073 908A byte 6
+D 908B 908B byte 1
+C 908B end of list
+L 8688 ITEMLIST_7
+H 8688
+| station 7 (Advanced Transporters) items: shape (+$80), y, x
+D 8688 869C byte 3
+D 869D 869D byte 1
+C 869D end of list
+L 9028 GIRDERS_7
+H 9028
+| station 7 (Advanced Transporters) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 9028 902A byte 3
+D 902B 902B byte 1
+C 902B end of the down-sloping girders
+D 902C 902E byte 3
+D 902F 902F byte 1
+C 902F end of the up-sloping girders
+D 9030 9071 byte 3
+D 9072 9072 byte 1
+C 9072 end of the flat girders
+L 8C77 MUTANTS_7
+H 8C77
+| station 7 (Advanced Transporters) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8C77 8CCE byte 11
+L 90D0 LADDERS_8
+H 90D0
+| station 8 (The Lift) ladders: height, x, y, style
+D 90D0 90E7 byte 4
+D 90E8 90E8 byte 1
+C 90E8 end of list
+L 90F0 SLIDES_8
+H 90F0
+| station 8 (The Lift) slides: rows, x, y, step
+D 90F0 9103 byte 4
+D 9104 9104 byte 1
+C 9104 end of list
+L 90E9 LIFTS_8
+H 90E9
+| station 8 (The Lift) moving platforms: timer, width, x, y, travel, speed
+D 90E9 90EE byte 6
+D 90EF 90EF byte 1
+C 90EF end of list
+L 869E ITEMLIST_8
+H 869E
+| station 8 (The Lift) items: shape (+$80), y, x
+D 869E 86AF byte 3
+D 86B0 86B0 byte 1
+C 86B0 end of list
+L 90AF GIRDERS_8
+H 90AF
+| station 8 (The Lift) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 90AF 90AF byte 1
+C 90AF end of the down-sloping girders
+D 90B0 90B0 byte 1
+C 90B0 end of the up-sloping girders
+D 90B1 90CE byte 3
+D 90CF 90CF byte 1
+C 90CF end of the flat girders
+L 8CCF MUTANTS_8
+H 8CCF
+| station 8 (The Lift) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8CCF 8D26 byte 11
+L 912A LADDERS_9
+H 912A
+| station 9 (The Pulverizers) ladders: height, x, y, style
+D 912A 9141 byte 4
+D 9142 9142 byte 1
+C 9142 end of list
+L 9168 SLIDES_9
+H 9168
+| station 9 (The Pulverizers) slides: rows, x, y, step
+D 9168 917F byte 4
+D 9180 9180 byte 1
+C 9180 end of list
+L 9143 LIFTS_9
+H 9143
+| station 9 (The Pulverizers) moving platforms: timer, width, x, y, travel, speed
+D 9143 9166 byte 6
+D 9167 9167 byte 1
+C 9167 end of list
+L 86B1 ITEMLIST_9
+H 86B1
+| station 9 (The Pulverizers) items: shape (+$80), y, x
+D 86B1 86C8 byte 3
+D 86C9 86C9 byte 1
+C 86C9 end of list
+L 9103 GIRDERS_9
+H 9103
+| station 9 (The Pulverizers) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 9103 9103 byte 1
+C 9103 end of the down-sloping girders
+D 9104 9104 byte 1
+C 9104 end of the up-sloping girders
+D 9105 9128 byte 3
+D 9129 9129 byte 1
+C 9129 end of the flat girders
+L 8D27 MUTANTS_9
+H 8D27
+| station 9 (The Pulverizers) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8D27 8D7E byte 11
+L 91A9 LADDERS_10
+H 91A9
+| station 10 (The Cannon) ladders: height, x, y, style
+D 91A9 91AC byte 4
+D 91AD 91AD byte 1
+C 91AD end of list
+L 91AE SLIDES_10
+H 91AE
+| station 10 (The Cannon) slides: rows, x, y, step
+D 91AE 91C5 byte 4
+D 91C6 91C6 byte 1
+C 91C6 end of list
+L 86CA ITEMLIST_10
+H 86CA
+| station 10 (The Cannon) items: shape (+$80), y, x
+D 86CA 86ED byte 3
+D 86EE 86EE byte 1
+C 86EE end of list
+L 917F GIRDERS_10
+H 917F
+| station 10 (The Cannon) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 917F 917F byte 1
+C 917F end of the down-sloping girders
+D 9180 9180 byte 1
+C 9180 end of the up-sloping girders
+D 9181 91A7 byte 3
+D 91A8 91A8 byte 1
+C 91A8 end of the flat girders
+L 8D7F MUTANTS_10
+H 8D7F
+| station 10 (The Cannon) mutants: 8 records of 11 bytes in the MUT_TAB layout; the y, step
+| timer, patrol length and colour timer are re-read from here while playing.
+D 8D7F 8DD6 byte 11
+L 91E0 LADDERS_11
+H 91E0
+| station 11 (the credits) ladders: height, x, y, style
+D 91E0 91EF byte 4
+D 91F0 91F0 byte 1
+C 91F0 end of list
+L 91C5 GIRDERS_11
+H 91C5
+| station 11 (the credits) girders: sections, x, y - three lists: sloping down, sloping up, flat
+D 91C5 91C5 byte 1
+C 91C5 end of the down-sloping girders
+D 91C6 91C6 byte 1
+C 91C6 end of the up-sloping girders
+D 91C7 91DE byte 3
+D 91DF 91DF byte 1
+C 91DF end of the flat girders

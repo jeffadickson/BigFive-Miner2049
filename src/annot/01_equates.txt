@@ -1,0 +1,208 @@
+# ---------------------------------------------------------------- hardware (400/800 addresses)
+= DMACTL   $D400 ; ANTIC: DMA control (playfield width, P/M DMA, P/M resolution)
+= CHACTL   $D401 ; ANTIC: character control (bit 0 = blank bit-7 characters, bit 1 = inverse)
+= DLISTL   $D402 ; ANTIC: display list address, low byte
+= DLISTH   $D403 ; ANTIC: display list address, high byte
+= HSCROL   $D404 ; ANTIC: horizontal fine scroll (0-15 colour clocks)
+= PMBASE   $D407 ; ANTIC: player/missile base page
+= CHBASE   $D409 ; ANTIC: character set base page
+= WSYNC    $D40A ; ANTIC: any write halts the CPU until the end of the scan line
+= VCOUNT   $D40B ; ANTIC: current scan line / 2
+= NMIEN    $D40E ; ANTIC: NMI enable (bit 7 = DLI, bit 6 = VBI)
+= NMIRES   $D40F ; ANTIC: write = reset NMI status (read = NMIST)
+= CONSOL   $D01F ; GTIA: console keys START/SELECT/OPTION (bits 0-2, 0 = pressed)
+= PORTA    $D300 ; PIA: joystick 0/1 directions (bits 0-3 stick 0: up,down,left,right; 0 = pushed)
+= PACTL    $D302 ; PIA: port A control (bit 2 selects data register / direction register)
+= FONT_800 $E000 ; OS ROM character set on the 400/800 (the game draws text from it)
+= FONT_5200 $F800 ; 5200 BIOS character set
+# ---------------------------------------------------------------- OS / BIOS vectors in page 2
+= VDSLST   $0200 ; 400/800 OS: display-list-interrupt vector
+= VVBLKI   $0222 ; 400/800 OS: immediate vertical-blank vector
+= VVBLKI5  $0202 ; 5200 BIOS: immediate vertical-blank vector
+= VVBLKD5  $0204 ; 5200 BIOS: deferred vertical-blank vector
+= VDSLST5  $0206 ; 5200 BIOS: display-list-interrupt vector
+# ---------------------------------------------------------------- zero page
+= LASTCHAR $02 ; name entry: letter chosen with the 5200 stick / game: last cheat digit typed
+= NAME_RPT $03 ; 5200 name entry: stick auto-repeat counter
+= NAME_DLY $04 ; 5200 name entry: keypad debounce timer
+= START_ZONE $05 ; zone picked with the number keys on the title screens (1-10)
+= WARMST   $08 ; OS warm-start flag: non-zero after RESET, so high scores survive RESET
+# the hardware pointer table built at power-up: $10+2r -> GTIA register r, $50+2r -> POKEY register r
+= pHPOSP0  $10 ; -> GTIA HPOSP0 (write) / M0PF (read)
+= pHPOSP1  $12 ; -> HPOSP1 / M1PF
+= pHPOSP2  $14 ; -> HPOSP2 / M2PF
+= pHPOSP3  $16 ; -> HPOSP3 / M3PF
+= pHPOSM0  $18 ; -> HPOSM0 / P0PF
+= pHPOSM1  $1A ; -> HPOSM1 / P1PF
+= pHPOSM2  $1C ; -> HPOSM2 / P2PF
+= pHPOSM3  $1E ; -> HPOSM3 / P3PF
+= pSIZEP0  $20 ; -> SIZEP0 / M0PL
+= pSIZEP1  $22 ; -> SIZEP1 / M1PL
+= pSIZEP2  $24 ; -> SIZEP2 / M2PL
+= pSIZEP3  $26 ; -> SIZEP3 / M3PL
+= pSIZEM   $28 ; -> SIZEM / P0PL
+= pGRAFP0  $2A ; -> GRAFP0 / P1PL
+= pGRAFP1  $2C ; -> GRAFP1 / P2PL
+= pGRAFP2  $2E ; -> GRAFP2 / P3PL
+= pTRIG0   $30 ; -> GRAFP3 / TRIG0 (joystick button, 0 = pressed)
+= pGRAFM   $32 ; -> GRAFM / TRIG1
+= pCOLPM0  $34 ; -> COLPM0 (player 0 colour)
+= pCOLPM1  $36 ; -> COLPM1
+= pCOLPM2  $38 ; -> COLPM2
+= pCOLPM3  $3A ; -> COLPM3
+= pCOLPF0  $3C ; -> COLPF0 (playfield colour 0)
+= pCOLPF1  $3E ; -> COLPF1
+= pCOLPF2  $40 ; -> COLPF2
+= pCOLPF3  $42 ; -> COLPF3 (also the colour of the missiles in fifth-player mode)
+= pCOLBK   $44 ; -> COLBK (background)
+= pPRIOR   $46 ; -> PRIOR
+= pVDELAY  $48 ; -> VDELAY
+= pGRACTL  $4A ; -> GRACTL
+= pHITCLR  $4C ; -> HITCLR
+= pCONSOL  $4E ; -> CONSOL
+= pAUDF1   $50 ; -> POKEY AUDF1 (write) / POT0 (read)
+= pAUDC1   $52 ; -> AUDC1 / POT1
+= pAUDF2   $54 ; -> AUDF2 / POT2
+= pAUDC2   $56 ; -> AUDC2 / POT3
+= pAUDF3   $58 ; -> AUDF3 / POT4
+= pAUDC3   $5A ; -> AUDC3 / POT5
+= pAUDF4   $5C ; -> AUDF4 / POT6
+= pAUDC4   $5E ; -> AUDC4 / POT7
+= pAUDCTL  $60 ; -> AUDCTL / ALLPOT
+= pSTIMER  $62 ; -> STIMER / KBCODE
+= pSKRES   $64 ; -> SKRES / RANDOM
+= pPOTGO   $66 ; -> POTGO
+= pPOKEY_C $68 ; -> (unused POKEY register $0C)
+= pSEROUT  $6A ; -> SEROUT / SERIN
+= pIRQEN   $6C ; -> IRQEN / IRQST
+= pSKCTL   $6E ; -> SKCTL / SKSTAT
+# text renderer (draws characters from the ROM font into the bitmap)
+= TXT_DST  $70 ; (2) bitmap line address for the pixel being drawn
+= TXT_FONT $72 ; (2) address of the font page holding the character
+= TXT_COLOR $74 ; colour of the "ink": 0 = colour 1, 4 = colour 2, 8 = colour 3, 12 = background
+= TXT_X    $75 ; x position (P/M horizontal coordinates: 48 = left edge of the playfield)
+= TXT_Y    $76 ; y position (scan line, 8-191)
+= TXT_BITS $77 ; bits left in the current font byte
+= TXT_ROWS $78 ; font rows left in the current character
+= TXT_VSCALE $79 ; vertical magnification (1 or 2 scan lines per font row)
+= TXT_ROW  $7A ; offset of the current font byte within the font page
+= TXT_LEN  $7B ; characters left to draw
+= TXT_IDX  $7C ; index of the next character in TEXT_POOL
+= PAUSE_DLY $7D ; ESC-key debounce for pause
+= SAVE_Y   $7F ; scratch save of Y
+# general scratch used by the drawing routines
+= PTR      $80 ; (2) general pointer
+= CNT0     $82 ; scratch counter
+= CNT1     $83 ; scratch counter / index
+= PLOT_COLOR $84 ; colour for PLOT: 0 = colour 1 (COLPF0), 4 = colour 2 (COLPF1), 8 = colour 3 (COLPF2), 12 = background
+= PLOT_X   $85 ; x for PLOT (P/M coordinates or raw pixel, depending on routine)
+= PLOT_Y   $86 ; y for PLOT (scan line)
+= CNT2     $87 ; scratch counter
+= CNT3     $88 ; scratch counter
+= CNT4     $89 ; scratch counter / slope
+= COLBK_V  $8A ; background colour (0 = black; flashes blue during the extra-life jingle)
+= COLPF0_V $8B ; station colour for pixel colour 1 (COLPF0): items, text
+= COLPF1_V $8C ; station colour for pixel colour 2 (COLPF1): ladders, slides
+= COLPF2_V $8D ; station colour for pixel colour 3 (COLPF2): girders, platforms
+= BLINK_TMR $8E ; frames until the status line blinks (CHACTL blank toggle)
+= BLINK_ON $8F ; current CHACTL value (0/1)
+= BOB_X    $90 ; Bounty Bob horizontal position (P/M coordinates)
+= BOB_Y    $91 ; Bounty Bob vertical position (top of his 21-line sprite)
+= BOB_FRAME $92 ; animation frame 0-12 (1-3 walk right, 4-6 walk left, 7-8 climb, 9-10 ladder top, 11-12 jump)
+= BOB_FALL $93 ; non-zero while Bob is falling freely
+= SPR_PTR  $94 ; (2) pointer to the current sprite or list
+= PIX_PTR  $96 ; (2) bitmap line pointer used by READ_PIXEL
+= JUMP_LOCK $98 ; frames before the button may start another jump
+= PROBE_Y  $99 ; scan line being tested under Bob's feet
+= PROBE_X  $9A ; P/M x being tested under Bob's feet
+= TMP9B    $9B ; scratch
+= WALK_STEP $9C ; walk animation step 1-3
+= FRAMES   $9D ; frame counter, incremented by every vertical-blank interrupt
+= LADDERS  $9E ; (2) pointer to this station's ladder list
+= MOVE_A   $A0 ; movement state A (jump frame, ladder rung, transporter timer ...)
+= MOVE_B   $A1 ; movement state B (jump direction, ladder limit ...)
+= FALL_LEN $A2 ; frames of falling counted by LAND_CHECK (40 or more is fatal)
+= SPECIAL  $A3 ; special state: 0 normal, 1 dying, 2 dead, 3-7 transporter phases
+= SND3_F   $A4 ; voice 3 frequency (footsteps, jump and fall effects)
+= SND3_VOL $A5 ; voice 3 decaying volume
+= ALIVE    $A6 ; 2 while the station is being played; counts down after death; 0 ends the turn
+= CNT5     $A7 ; scratch counter
+= SLIDES   $A8 ; (2) pointer to this station's slide (chute) list
+= SLIDE_LEN $AA ; frames left on a slide
+= CNT6     $AB ; scratch
+= TRANS_LOCK $AC ; transporter lock-out after a trip / flashing colour on some stations
+= TRANS_DEST $AD ; transporter tube Bob asked for (1-4)
+= TRANS_Y  $AE ; Bob's vertical position saved while he is transported
+= DLI_BAND $AF ; which horizontal band of mutants the next DLI handles (4..0)
+= TRANS_SRC $B0 ; tube Bob is standing in
+= LIFTS    $B1 ; (2) pointer to this station's moving-platform list
+= SPECIAL_X $B3 ; position of this station's special object (cannon, transporter column)
+= DYING    $B4 ; death animation counter (non-zero while Bob is dying)
+= PLAYER   $B5 ; current player (0 or 1)
+= STATION  $B7 ; station being played (1-10; 11 = the title/credits screen)
+= ZONE     $B8 ; zone (each zone is one pass through the ten stations, getting harder)
+= LIVES    $B9 ; lives left
+= XLIFE    $BA ; extra life: 10 = not yet earned, 9..1 = jingle playing, 0 = done
+= SCORE    $BB ; score: six decimal digits, one per byte, most significant first ($BB-$C0)
+= P2_DATA  $C1 ; the other player's copy of STATION..SCORE ($C1-$CA)
+= P2_LIVES $C3 ; the other player's lives (non-zero means he is still playing)
+= IS5200   $CB ; 0 on the Atari 400/800, 1 on the Atari 5200
+= FONTPAGE $CC ; high byte of the ROM font: $E0 on the 400/800, $F8 on the 5200
+= LINECNT  $CD ; scan-line counter inside display list interrupts
+= CNT7     $CE ; scratch counter
+= POT_X    $CF ; 5200: analog stick X (POT0)
+= POT_Y    $D0 ; 5200: analog stick Y (POT1)
+= ITEM_GOT $D1 ; set when an item is picked up: the mutants turn edible on the next frame
+= CANNON_DONE $D2 ; station 10: Bob has been fired to the top and is no longer drawn as a cannonball
+= CANNON_ST $D3 ; station 10 cannon state: 0 idle, 1 Bob inside, 2 fired
+= CANNON_X $D4 ; station 10 cannon position
+= TNT      $D5 ; station 10 TNT charge loaded (tons)
+= LIFT_DLY $D6 ; station 8 lift: key debounce
+= LIFT_ON  $D7 ; station 8 lift: Bob is operating the lift
+= LIFT_ANIM $D8 ; station 8 lift: scissor animation frame 0-6
+= ON_LIFT  $D9 ; zero when Bob is standing on the lift platform
+= LIFT_X   $DA ; station 8 lift platform x
+= LIFT_Y   $DB ; station 8 lift platform y
+= CHEAT_IDX $DD ; how many digits of the phone-number code have been typed (13 = all)
+= SAVE_Y2  $DE ; scratch save of Y
+= DEMO_CNT $DF ; frames left for the current demo input
+= KEYCODE  $E0 ; last key read from POKEY ($FF = none)
+= DEMO_PTR $E1 ; (2) pointer into the recorded demo; high byte 0 = a real player is playing
+= START_DLY $E3 ; START/fire debounce
+= PAUSED   $E4 ; non-zero while the game is paused (ESC key)
+= MUT_SCORE $E5 ; hundreds to add for an eaten mutant (8 or 9)
+= HIT_M    $E6 ; missile-to-player collisions, one byte per mutant band ($E6-$E9)
+= HIT_P3   $EA ; player 3 (mutant) to player collisions, one byte per band ($EA-$ED)
+= TMPEF    $EF ; scratch
+= MUT_PM   $F0 ; (2) pointer into player-3 memory when a mutant's shape is drawn
+= MUT_LOOP $F2 ; mutants left to process in this DLI
+= MUTANTS  $F3 ; (2) pointer to this station's mutant definitions
+= MUT_IDX  $F5 ; offset of the current mutant record (multiples of 11)
+= SECTIONS $F6 ; floor sections still to be claimed (0 = station complete)
+= TICK_SND $F7 ; bonus-timer tick sound counter
+= WIPE_LINE $F8 ; screen wipe: display-list line being removed (0 = finished)
+= TWO_PLAYER $F9 ; 0 = one-player game, 1 = two-player game
+= LIFE_USED $FA ; set once a life has been taken for this turn
+= BCD_100  $FB ; scratch digit / DLI timer
+= SEC_TMR  $FC ; 60-frame timer
+= BONUS_TMR $FD ; frames until the bonus timer drops by 100
+= MOVE_OK  $FE ; 0 while the station is starting, then 7 (Bob may move)
+= KILLED   $FF ; non-zero: Bob has touched a mutant or run out of time
+# ---------------------------------------------------------------- RAM
+= PM_MISSILES $0300 ; player/missile memory (single-line resolution, PMBASE effectively 0): missiles
+= PM_P0    $0400 ; player 0: Bob's outline colour
+= PM_P1    $0500 ; player 1: Bob's second colour
+= PM_P2    $0600 ; player 2: Bob's third colour
+= PM_P3    $0700 ; player 3: the mutants (re-used five times down the screen)
+= HISCORES $0800 ; high-score table: 10 lines of 20 screen-code characters
+= TEXT_RAM $08C8 ; text lines for the title, high-score and "prepare" screens
+= ITEMS    $0992 ; this station's items, 3 bytes each: shape number (bit 7 = still there), y, x
+= MUT_TAB  $09C0 ; mutant records, 11 bytes each (8 mutants)
+= PULV_TAB $0A19 ; station 9 pulverizers: 3 bytes each (timer, direction, height)
+= FONT5200 $1C00 ; 5200: RAM copy of the BIOS font with a few changed characters
+= DLIST    $2000 ; game display list
+= STATUS   $20D8 ; status line (40 characters of ANTIC mode 2)
+= BITMAP   $2100 ; the playfield: 184 lines x 40 bytes, 4 pixels per byte (ANTIC mode E)
+= LINE_LO  $3DB8 ; low byte of the address of each bitmap line, indexed by y (8-191)
+= LINE_HI  $3E70 ; high byte of the address of each bitmap line
+= LIFT_TAB $3F30 ; moving-platform records, 6 bytes each

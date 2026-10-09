@@ -1,0 +1,660 @@
+############################################################ moving platforms, claiming, mutants
+L B52E UPDATE_LIFTS
+H B52E
+| UPDATE_LIFTS - move the moving platforms (LIFT_TAB records, see INIT_LIFTS).
+| Each platform moves one pixel each time its timer runs out: the column at the leading
+| edge is drawn and the one at the trailing edge erased, so only 6 pixels change. After
+| "travel" steps it turns round. A platform carries Bob with it when his feet are on it.
+| Station 9's platforms wait at each end until Bob steps onto them.
+| On station 9 the column erased behind a platform between x $1E-$25 is redrawn in colour 2:
+| that is where a ladder passes behind it.
+C B52E
+L B530 UL_LOOP
+C B530
+C B532 timer (0 = end of list)
+C B535
+C B537
+C B538
+C B539 count down
+C B53C time to move
+L B53E UL_NEXT_X
+C B53E
+L B53F UL_NEXT
+C B53F next record
+C B540
+C B542
+C B543
+L B546 UL_MOVE
+C B546 reload the timer from the station data
+C B548
+C B54B station 8's lift is handled elsewhere
+C B54D
+C B54F
+C B551 Bob's feet on the platform's line ...
+C B553
+C B554
+C B556
+C B559
+C B55B ... not falling ...
+C B55D
+C B55F ... walking or standing (or in a special state) ...
+C B561
+C B563
+C B565
+C B567
+L B569 UL_ON_X
+C B569 ... and within its width?
+C B56C
+C B56D
+C B56F
+C B571
+C B574
+C B576
+C B579
+C B57A
+C B57C
+C B57E
+C B580 yes: carry Bob along
+C B582
+C B585
+C B587
+L B58A UL_STATION9
+C B58A station 9: a platform at the start of its run waits for Bob
+C B58C
+C B58E
+C B590
+C B591
+C B592
+C B594
+C B595
+C B597
+C B59A
+C B59C
+C B59D
+L B59E UL_STEP
+C B59E moving left or right?
+C B5A1
+C B5A3 left: x - 1; draw at x, erase at x + width
+C B5A6
+C B5A9
+C B5AB
+C B5AC
+C B5AF
+C B5B1
+L B5B4 UL_RIGHT
+C B5B4 right: draw at x + width, erase at x; x + 1
+C B5B7
+C B5B9
+C B5BA
+C B5BD
+C B5BF
+L B5C2 UL_DRAW
+C B5C2 leading column in colour 3 (colour 1 on station 8)
+C B5C4
+C B5C6
+C B5C8
+C B5CA
+L B5CC UL_DRAW2
+C B5CC
+C B5CF trailing column in the background colour ...
+C B5D1
+C B5D3
+C B5D5
+C B5D7
+C B5D9
+C B5DB
+C B5DD ... or colour 2 where station 9's ladder is
+C B5DF
+C B5E1
+C B5E3
+L B5E5 UL_ERASE
+C B5E5
+C B5E8 end of the run?
+C B5E9
+C B5EA
+C B5ED
+C B5EF
+L B5F2 UL_TURN
+C B5F2 reverse the direction and reload the run length
+C B5F4
+C B5F5
+C B5F8
+C B5FB
+C B5FC
+C B5FD
+C B5FF
+C B600
+C B602
+C B605
+C B606
+C B607
+L B60A LIFT_COLUMN
+H B60A
+| LIFT_COLUMN - 3 pixels down from the platform's line at x = PLOT_X, colour X.
+C B60A
+C B60C
+C B60E
+C B610
+C B613
+L B615 LC_LOOP
+C B615
+C B617
+C B619
+C B61C
+C B61E
+C B620
+C B622
+L B624 CF_RTS
+C B624
+L B625 CLAIM_FLOOR
+H B625
+| CLAIM_FLOOR - the heart of the game: the girder section under Bob's feet becomes his.
+|
+| Runs every frame while Bob walks or stands (not on the bottom floor, not during the
+| start-up second, not dying, falling, sliding or in a special state). For the current
+| animation frame, FEET_OFFSETS gives the x of his two feet. Under each foot:
+|   * the feet line must be girder (colour 3);
+|   * an unclaimed section is striped, so one of the next two lines is background:
+|     if the line below the feet is background, the gaps are at +1, +3, +5 (3 rows),
+|     otherwise at +2, +4 (2 rows); if both lines are solid it is already claimed.
+|   * claim it: SECTIONS - 1, score + 5, find the section's left edge (the stripe
+|     pattern changes between neighbouring sections), and fill its gap rows with
+|     colour 3, so the 4-pixel section turns solid.
+| The station is complete when SECTIONS reaches 0.
+C B625 not on the bottom floor
+C B627
+C B629
+C B62B not before Bob may move
+C B62D
+C B62F not when killed
+C B631
+C B633 not when dying
+C B635
+C B637 not when falling
+C B639
+C B63B not when sliding
+C B63D
+C B63F not in a special state
+C B641
+C B643 walking or standing only
+C B645
+C B647
+C B649 the two foot positions for this frame
+C B64A
+C B64B
+C B64E
+C B64F
+C B650
+C B653 second foot
+C B656 first foot
+L B65A CLAIM_AT
+C B65A x = BOB_X + offset
+C B65B
+C B65D
+C B65F y = feet line
+C B661
+C B662
+C B664
+C B666 girder under the foot?
+C B669
+C B66B line below solid?
+C B66D
+C B670
+C B672 and the one after: if solid too, already claimed
+C B674
+C B677
+C B679 2 gap rows (at +2, +4)
+C B67B
+L B67D CA_THREE
+C B67D 3 gap rows (at +1, +3, +5)
+L B67F CA_CLAIM
+C B67F
+C B681 one section fewer to go
+C B683 5 points (digit 6 = units)
+C B685
+C B687
+C B68A find the left edge of the section: solid just left of here (in a gap row)?
+C B68C
+C B68F
+C B691 no: look up to 3 more pixels left
+C B693
+L B695 CA_LEFT
+C B695
+C B697
+C B699 left edge of the screen
+C B69B
+C B69D
+C B6A0
+C B6A2
+C B6A4
+C B6A6 none: the section starts further right; step 4 right, then scan right
+C B6A8
+C B6AA
+C B6AC
+L B6AE CA_RIGHT
+C B6AE
+L B6B0 CA_RIGHT_CHK
+C B6B0
+C B6B2
+C B6B5
+C B6B7
+C B6B9
+C B6BA
+C B6BC
+L B6BE CA_FILL
+C B6BE first pixel of the section
+C B6C0 fill in colour 3
+C B6C2
+C B6C4 P/M x -> pixel x
+C B6C6
+C B6C7
+C B6C9
+L B6CB CA_ROW
+C B6CB 4 pixels in this gap row
+C B6CD
+C B6CF
+C B6D1
+C B6D3
+L B6D6 CA_PIX
+C B6D6
+C B6D8
+C B6DA
+C B6DD
+C B6DF
+C B6E1 next gap row (2 lines down)
+C B6E3
+C B6E5
+C B6E7
+C B6E9
+C B6EB
+C B6ED
+C B6EF
+L B6F0 CA_EDGE
+C B6F0 reached the left edge of the screen
+C B6F2
+C B6F3
+C B6F5
+C B6F6
+C B6F8
+C B6FA
+L B6FD READ_HITS
+H B6FD
+| READ_HITS - save the collision registers for band X: any missile touching a player
+| (M0PL..M3PL) in HIT_M, player 3 touching a player (P3PL) in HIT_P3. Bob is players
+| 0-2, so bits 0-2 mean "touched Bob".
+C B6FD
+C B6FF
+C B701
+C B703
+C B705
+C B707
+C B709
+C B70B
+C B70D
+L B70E DLI_MUTANTS
+H B70E
+| DLI_MUTANTS - one DLI at the end of the status line and three more down the playfield
+| (bitmap lines 46, 93 and 140) divide the screen into four bands. Eight mutants share
+| two sprites: in each band one is drawn with player 3 and one with the four missiles
+| side by side (fifth-player mode, colour COLPF3). Each DLI:
+|   * saves and clears the collisions of the band just finished (READ_HITS);
+|   * re-positions player 3 and the missiles for this band's two mutants;
+|   * sets band-specific things: the real playfield colours below the status line, the
+|     transporter booth colour (green, or red while it recharges), the lift (station 8,
+|     band 3) or the cannon (station 10, bottom band) which also use player 3 and the
+|     missiles, and a flickering colour 1 in the bottom band on stations 5, 6, 8 and 9
+|     (the radioactive waste glows);
+|   * moves two mutants and draws their shapes (the work is spread over the four DLIs).
+C B70E save A, X, Y
+C B70F
+C B710
+C B711
+C B712
+C B713 first DLI of the frame (status line): no band finished yet
+C B715
+C B717
+C B719 band index 1-4
+C B71A
+C B71B
+C B71C
+C B71E
+C B71F
+L B722 DM_HITCLR
+C B722
+C B724 clear the collision registers
+C B726 transporter state 5: Bob's colours flash in the booths involved
+C B728
+C B72A
+C B72C
+C B72E
+C B730
+C B732
+C B734
+C B736
+C B738
+C B739
+C B73B
+L B73D DM_FLASH
+C B73D
+L B73F DM_FLASH_SET
+C B73F
+C B741
+C B743
+C B745
+L B747 DM_FLASH2
+C B747
+C B749
+C B74B
+C B74D
+L B74F DM_BAND
+C B74F which band?
+C B751
+C B753
+C B755
+C B757
+C B759 band 3 on station 8: player 3 is the lift
+C B75B
+C B75D
+C B75F
+C B761
+C B763
+C B765
+C B767 double width
+C B769
+L B76B DM_BAND_J
+C B76B
+L B76E DM_BAND1
+C B76E
+C B770
+C B772 bottom band on station 10: the cannon (missiles + player 3)
+C B774
+C B776
+C B778
+C B77A
+C B77C
+L B77D DM_CANNON
+C B77D HPOSM3 = x, M2 = x+2, M1 = x+4, M0 = x+6
+C B77F
+C B781
+C B782
+C B783
+C B785 player 3 to the right of them
+C B787
+C B789
+C B78B
+C B78D
+L B78F DM_GLOW
+C B78F stations 5, 6, 8, 9: colour 1 flickers in the bottom band
+C B791
+C B793
+C B795
+C B797
+C B799
+C B79B
+C B79D
+L B79F DM_GLOW_SET
+C B79F
+C B7A1 a new random colour every 4 frames
+C B7A3
+C B7A5
+C B7A7
+C B7A9
+C B7AB
+C B7AC
+C B7AE
+C B7B0
+C B7B1
+L B7B3 DM_TOP
+C B7B3 below the status line: the station's own colours 2 and 3
+C B7B5
+C B7B7
+C B7B9
+C B7BB missiles normal width (they are double width for the bonus box)
+C B7BD
+C B7BF transporter booths?
+C B7C1
+C B7C3 green ...
+C B7C5
+C B7C7
+C B7C9 ... red while it recharges: one step per 64 frames (128 from zone 5)
+C B7CB
+C B7CD
+C B7CF
+C B7D1
+C B7D3
+C B7D5
+C B7D7
+C B7D9
+C B7DB
+L B7DD DM_RECHARGE
+C B7DD
+C B7DF
+L B7E1 DM_RED
+C B7E1
+L B7E3 DM_COLPF0
+C B7E3
+C B7E4
+L B7E6 DM_POSITION
+C B7E6 the missile mutant of this band (the record after MUT_IDX)
+C B7E8
+C B7EB
+C B7ED four missiles side by side, 2 apart
+C B7EF
+L B7F0 DM_MISSILES
+C B7F0
+C B7F2
+C B7F4
+C B7F5
+C B7F6
+C B7F8 its colour
+C B7FA
+C B7FD
+L B7FF DM_PLAYER3
+C B7FF the player-3 mutant of this band
+C B802
+C B804
+C B806
+C B809
+L B80B DM_LOGIC
+C B80B update two mutants: the first drawn into the missiles ($0300) ...
+C B80D
+C B80F
+C B811
+C B813
+L B815 MUT_UPDATE
+H B815
+| MUT_UPDATE - move and animate one mutant; its record is at MUT_TAB + $4D - MUT_IDX.
+| Record (11 bytes, set up from the station's mutant list):
+|   0 x (0 = none, 1 = eaten)    1 normal colour      2 state: bit 0 step, bit 1 facing,
+|   3 colour now                 4 colour timer         bit 2 edible, 8/9 = eaten (the
+|                                                       shape becomes "80" or "90")
+|   5 brightness step (+/-2)     6 steps left in this direction
+|   7 dx (+/-1)                  8 frames per step      9 animation timer
+|  10 edible time
+| The station's list gives y, the step timer, the patrol length and the colour timer.
+C B815
+C B817
+C B819
+C B81B
+C B81C
+C B81E
+C B81F nobody there (0) or eaten (1)?
+C B822
+C B824
+C B826 paused?
+C B828
+C B82A turn over?
+C B82C
+C B82E station cleared?
+C B830
+L B832 MU_SKIP
+C B832
+L B835 MU_ACTIVE
+C B835 being eaten?
+C B838
+C B83A
+C B83C flashing random colour
+C B83E
+C B840
+C B843 rising tone on voice 2 (AUDF2 counts down)
+C B846
+C B848
+C B84A
+C B84C
+C B84F
+L B852 MU_HIT
+C B852 did it touch Bob in its band? (collision bits 0-2 = players 0-2)
+C B854
+C B855
+C B857
+C B858
+C B85B
+C B85D
+C B85F edible?
+C B862
+C B864 yes: Bob eats it: 80 or 90 points (added by GAME_VBI), then it flashes and disappears
+C B866
+C B869
+C B86B
+C B86D
+C B86F
+C B871
+C B873
+L B876 MU_KILL
+C B876 no: Bob is killed
+L B878 MU_COLOUR
+C B878 colour timer
+C B87B
+C B87D edible: blink green ($C6) / purple ($5A) ...
+C B880
+C B882
+C B885
+C B887
+C B88A
+C B88C
+C B88E
+C B890
+L B892 MU_EDIBLE_TICK
+C B892 ... and each green blink halves the time left
+C B895
+C B898
+C B89A edible time over: back to its own colour
+C B89D
+C B8A0
+C B8A3
+C B8A5
+C B8A8
+L B8AA MU_BLINK
+C B8AA
+C B8AD
+L B8AF MU_SHIMMER
+C B8AF normal: brightness pulses up and down by 2
+C B8B0
+C B8B1
+C B8B3
+C B8B4
+C B8B6
+C B8B9
+C B8BC
+C B8BD
+C B8C0
+C B8C3
+C B8C5
+C B8C7
+C B8C9
+C B8CB
+C B8CD
+L B8CF MU_STEP_UP
+C B8CF
+L B8D1 MU_STEP_SET
+C B8D1
+L B8D4 MU_MOVE
+C B8D4 time for a step?
+C B8D7
+C B8D9 next step after (list value + 1 - zone) frames, at least 1
+C B8DA
+C B8DB
+C B8DD
+C B8DE
+C B8E0
+C B8E1
+C B8E3
+C B8E4
+C B8E6
+C B8E8
+L B8EA MU_FASTEST
+C B8EA
+L B8EC MU_DELAY
+C B8EC
+C B8EF x = x + dx
+C B8F2
+C B8F3
+C B8F6
+C B8F9 end of the patrol?
+C B8FC
+C B8FE turn round: reload the patrol length, negate dx, face the other way
+C B8FF
+C B900
+C B902
+C B905
+C B907
+C B908
+C B90B
+C B90E
+C B911
+C B913
+C B916
+L B919 MU_ANIM
+C B919 animation timer
+C B91C
+L B91E MU_ANIM_NOW
+C B91E
+C B920
+C B923 eaten and finished?
+C B926
+C B928
+C B92A voice 2 off, mutant gone
+C B92C
+C B92D
+C B92F
+C B931
+C B933
+L B936 MU_NEXT_STEP
+C B936 toggle the walking step
+L B938 MU_SHAPE
+C B938 draw shape (state * 12) at the mutant's y + $20 in its P/M memory
+C B93B
+C B93C
+C B93D
+C B93F
+C B940
+C B942
+C B943
+C B944
+C B945
+C B946
+C B948
+C B94A
+C B94B
+C B94C
+C B94D 10 lines
+C B94F
+L B951 MU_COPY
+C B951
+C B954
+C B956
+C B957
+C B958
+C B95A
+L B95C MU_NEXT
+C B95C next record; the second one goes into player 3 ($0700)
+C B95E
+C B95F
+C B961
+C B963
+C B965
+C B967
+C B969
+L B96C MU_DONE
+C B96C next band
+C B96E

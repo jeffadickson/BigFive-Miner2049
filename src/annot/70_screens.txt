@@ -1,0 +1,1017 @@
+############################################################ prepare screen, name entry, station start, status line
+L A881 PREP_VBI
+H A881
+| PREP_VBI - vertical blank of the "MINER 1 / PREPARE FOR / STATION 1 / ZONE 1" screen.
+| Every 30 frames FRAMES counts down (it starts at 6: three seconds). The background
+| flashes red/black with a two-tone siren, and the station line flickers through random
+| colours. The station is drawn behind this screen meanwhile.
+C A881 DMACTL: normal playfield, display list on, no P/M
+C A883
+C A886 display list at $0978 (built by PREPARE_SCREEN)
+C A888
+C A88B
+C A88D
+C A890 fine scroll used to centre some lines
+C A892
+C A895 every 30 frames ...
+C A897
+C A899
+C A89B
+C A89D ... count down
+L A89F PV_COLOURS
+C A89F odd or even second?
+C A8A1
+C A8A3
+C A8A5 red background, siren note $96, zone line black
+C A8A7
+C A8A9
+C A8AB
+L A8AD PV_EVEN
+C A8AD black background, siren note $4B, zone line orange
+C A8AF
+C A8B1
+L A8B3 PV_SET
+C A8B3
+C A8B4
+C A8B5
+C A8B7 COLPF3: "ZONE n"
+C A8B9
+C A8BA COLBK
+C A8BC
+C A8BD siren
+C A8BF
+C A8C1
+C A8C3 COLPF0: "MINER n"
+C A8C5
+C A8C7 COLPF1: "PREPARE FOR"
+C A8C9
+C A8CB COLPF2: "STATION n", a random colour every frame
+C A8CD
+C A8CF
+L A8D2 NAME_ENTRY
+H A8D2
+| NAME_ENTRY - "MINER 1 / great score! / enter your name. / >>        <<"
+| The player types up to 8 characters (400/800 keyboard), or on the 5200 picks letters
+| with the stick and enters them with the fire button. RETURN / START / the 5200's lower
+| button ends entry, and so does a time limit (60 s; 120 s on the 5200).
+| Each character goes both into the name on screen ($095E) and straight into the
+| high-score line at HISCORES + CNT0 + 2. The whole thing runs in NAME_VBI; this routine
+| sets up and waits for CNT4 to become non-zero.
+C A8D2 copy the screen text (84 bytes from NAME_TEXT)
+L A8D4 NE_TEXT
+C A8D4
+C A8D7
+C A8DA
+C A8DB
+C A8DD clear the missiles ($0300-$03FF): they form the cursor
+L A8DE NE_CLEAR
+C A8DE
+C A8E1
+C A8E2
+C A8E4 5200: copy its ROM font to RAM at $1C00 so one glyph can be changed
+C A8E6
+C A8E8
+C A8EA
+C A8EC
+C A8EE
+C A8F0
+C A8F2
+C A8F4
+C A8F7 512 bytes = the first 64 characters
+L A8F9 NE_FONT
+C A8F9
+C A8FB
+C A8FD
+C A8FE
+C A900
+C A902
+C A904
+C A905
+C A907 character $3E (the "delete" choice) gets the glyph at $FAF0
+L A909 NE_GLYPH
+C A909
+C A90C
+C A90F
+C A910
+L A912 NE_PLAYER
+C A912 "MINER n": which player's score is this?
+C A914
+C A916
+C A918
+C A91A
+C A91B
+L A91D NE_PLAYER_SET
+C A91D digit with colour bits ($91 = '1' in colour 2)
+C A91E
+C A920
+C A923 X = 8: (pAUDF4,x) is (pSKRES) = RANDOM: a random hue for the rainbow
+C A925
+C A927
+C A929
+C A92B
+C A92D
+C A92F
+C A931 name length 0, no repeat, not finished
+C A933
+C A935
+C A937
+C A939
+C A93B
+C A93D
+C A93F silence voices 2-4
+C A942 5200 letter starts at 'A'
+C A944
+C A946 cursor: two solid missile rows
+C A948
+C A94B
+C A94E no key
+C A950
+C A952
+C A954 opening beep sweep
+C A956
+C A958 START must be released first
+C A95A X = 2: (pCONSOL,x) = (pAUDF1): AUDF1 = 2
+C A95B
+C A95D       and (pAUDF1,x) = (pAUDC1): pure tone, volume 15
+C A95F
+C A961 no key held
+C A963
+C A965 one second ...
+C A967
+C A969
+C A96B ... and 60 of them (120 on the 5200) before giving up
+C A96D
+C A96F
+L A970 NE_LIMIT
+C A970
+C A972 VBI = NAME_VBI
+C A974
+C A976
+C A979 DLI = DLI_NAME
+C A97B
+C A97D
+C A980
+C A982
+L A985 NE_WAIT
+C A985 wait for NAME_VBI to finish
+C A987
+C A989
+C A98B
+L A98E NE_RTS
+C A98E
+L A98F NAME_DLIST
+H A98F
+| NAME_DLIST - display list of the name-entry screen, also copied to $0978 for the
+| "prepare" screen: 7 x 8 blank lines (the 5th requests the DLI), then four mode 7 text
+| lines with blank lines between them, starting at $0918, then JVB $0978.
+D A98F A9A8 dlist 32
+L A9A9 NAME_VBI
+H A9A9
+| NAME_VBI - runs the whole name entry, once per frame.
+C A9A9
+C A9AC display list
+C A9AE
+C A9B1
+C A9B3
+C A9B6 DMACTL: normal playfield, missiles on, single-line P/M
+C A9B8
+C A9BB 5200: read the analog stick
+C A9BE stick, 400/800 or 5200 format
+C A9C1 5200 letter choice: left = -1 ...
+C A9C3
+C A9C4
+C A9C5
+C A9C6
+C A9C8 ... right = +1
+C A9CA
+C A9CB
+C A9CD centred: reset the auto-repeat
+C A9CF
+C A9D1
+L A9D3 NV_REPEAT
+C A9D3 first frame moves at once, then after 40 frames every 8
+C A9D5
+C A9D7
+C A9D9
+C A9DB
+C A9DD
+C A9DF
+C A9E1
+L A9E3 NV_MOVE
+C A9E3 new letter, kept within $00-$3E
+C A9E4
+C A9E5
+C A9E7
+C A9E9
+C A9EB
+C A9ED
+L A9EF NV_COLOURS
+C A9EF black background, playfield colour 2 black
+C A9F1
+C A9F2
+C A9F4
+C A9F6 missile DMA on (the cursor)
+C A9F8
+C A9FA text colours
+C A9FC
+C A9FE cursor colour (missiles use COLPF3 in fifth-player mode)
+C AA00
+C AA02 key click: switch off after 5 frames
+C AA04
+C AA06
+C AA08
+C AA0A
+C AA0B
+C AA0C X = 0 here: AUDC2 = 0
+L AA0E NV_RAINBOW
+C AA0E every 15 frames move the rainbow on one hue (skipping grey)
+C AA10
+C AA12
+C AA14
+C AA16
+C AA18
+C AA1A
+C AA1C
+C AA1E
+C AA20
+C AA21
+C AA23
+C AA25
+C AA27
+L AA29 NV_RAINBOW_SET
+C AA29
+L AA2B NV_KEYS
+C AA2B START (or the button on the 400/800) finishes
+C AA2E
+C AA30
+C AA32 which machine?
+C AA34
+C AA36 5200: lower button (SKSTAT bit 3) finishes, once NAME_DLY has run out
+C AA38
+C AA3A
+C AA3C
+C AA3E
+C AA40
+C AA42
+L AA44 NV_5200_FIRE
+C AA44 5200: fire button enters the chosen letter
+C AA46
+C AA48 (code of the space key, $21, or of DELETE, $34, if the "delete" glyph is chosen)
+C AA4A
+C AA4C
+C AA4E
+C AA50
+L AA52 NV_5200_RPT
+C AA52 only on the first frame of the press
+C AA54
+C AA56
+C AA58
+C AA5A
+L AA5C NV_800_KEY
+C AA5C 400/800: a new key?
+C AA5E
+C AA60
+C AA62 none: is the last key still held down?
+C AA64
+C AA66
+L AA68 NV_RELEASED
+C AA68
+L AA6B NV_HELD
+C AA6B held: auto-repeat after 40 frames
+C AA6D
+C AA6F
+L AA71 NV_TAIL_J
+C AA71
+L AA74 NV_REPEAT_KEY
+C AA74
+C AA76
+L AA78 NV_REPEAT_CHK
+C AA78
+C AA7A
+C AA7C
+C AA7E
+C AA80
+L AA82 NV_NEW_KEY
+C AA82 new key: remember it
+C AA84
+C AA86
+C AA87
+C AA89
+C AA8B
+C AA8D
+L AA8F NV_RETURN
+C AA8F RETURN finishes
+C AA91
+L AA93 NV_FINISH
+C AA93
+C AA95
+L AA98 NV_CHAR
+C AA98 DELETE?
+C AA9A
+C AA9C name full (8 characters)? low buzz
+C AA9E
+C AAA0
+C AAA2
+C AAA4 key code -> screen code
+C AAA7
+C AAA9 digits and punctuation: with SHIFT use the shifted symbol
+C AAAB
+C AAAD
+C AAAE
+C AAB0
+C AAB2
+C AAB4
+C AAB5
+C AAB6
+C AAB7
+C AAB8
+C AABA
+C AABB
+L AABE NV_STORE
+C AABE
+C AABF
+C AAC1 on the 5200 the character is the chosen letter
+C AAC3
+C AAC5
+C AAC6
+C AAC8
+L AAC9 NV_STORE2
+C AAC9 into the name on screen
+C AACA
+C AACD
+C AACF cursor visible
+C AAD0
+C AAD2
+C AAD4
+C AAD6
+C AAD8 and into the high-score line
+C AAD9
+C AADB
+C AADE
+L AAE0 NV_CLICK
+C AAE0 click
+L AAE2 NV_BEEP
+C AAE2
+C AAE4
+C AAE6
+C AAE8
+C AAEA
+C AAEC
+C AAEE
+L AAF0 NV_DELETE
+C AAF0 delete: nothing to delete? buzz
+C AAF2
+C AAF4
+C AAF6 remove the last character from both places
+C AAF8
+C AAFB
+C AAFD
+C AAFF
+C AB01
+C AB03
+C AB06
+L AB08 NV_NO_REPEAT
+C AB08
+C AB0A
+C AB0C
+L AB0E NV_SET_DONE
+C AB0E finished
+L AB10 NV_CURSOR
+C AB10 cursor blinks every 15 frames
+C AB12
+C AB14
+C AB16
+C AB18
+C AB1A
+C AB1C
+L AB1E NV_CURSOR_POS
+C AB1E four missiles side by side under the next character
+C AB20
+C AB21
+C AB22
+C AB23
+C AB25
+C AB27
+C AB29
+L AB2A NV_CURSOR_LOOP
+C AB2A X = 6,4,2,0: HPOSM3 ... HPOSM0
+C AB2C
+C AB2E
+C AB2F
+C AB30
+C AB32 the character at the cursor: blank, or on the 5200 the letter being chosen
+C AB34
+C AB35
+C AB37
+C AB39
+L AB3B NV_PREVIEW
+C AB3B
+C AB3D
+C AB40 opening beep: rising sweep until it wraps to 0
+C AB42
+C AB44
+C AB46
+C AB48
+C AB4A
+C AB4C
+C AB4E
+L AB50 NV_TIMEOUT
+C AB50 time limit
+C AB52
+C AB54
+C AB56
+C AB58
+C AB5A
+C AB5C
+L AB5E NV_EXIT
+C AB5E
+C AB60
+C AB62
+L AB64 NV_EXIT2
+C AB64
+L AB67 BLANK_VBI
+H AB67
+| BLANK_VBI - used while the credits screen (station 11) is being built: screen, players
+| and sound off, FRAMES held at 0.
+C AB67
+C AB6A Y = 0 after POLL_KEYS
+C AB6B
+C AB6E
+C AB70
+C AB72
+C AB74
+C AB76
+L AB78 DLI_NAME
+H AB78
+| DLI_NAME - the name-entry screen's background: 170 scan lines of colour bands, the
+| hue moving on every 5 lines, while the text brightness ripples line by line.
+C AB78
+C AB79
+C AB7A
+C AB7B
+C AB7C
+C AB7D 170 lines
+C AB7F
+C AB81
+C AB83
+C AB85 start colour (moves every 15 frames)
+C AB87
+L AB89 DN_LINE
+C AB89
+C AB8C background colour for this line
+C AB8E
+C AB8F text brightness
+C AB91
+C AB92
+C AB94
+C AB96
+C AB98
+C AB99 every 5 lines the next hue (skipping grey)
+C AB9A
+C AB9C
+C AB9E
+C ABA0
+C ABA2
+C ABA4
+L ABA6 DN_NEXT
+C ABA6
+C ABA8
+L ABAA DN_END
+C ABAA
+C ABAD background back to black
+C ABAE
+C ABB0
+L ABB3 DLI_RAINBOW
+H ABB3
+| DLI_RAINBOW - the end of the credits: the only interrupt left running (there is no
+| VBI), so it also reads the keys and advances FRAMES. 180 lines of colour 1 change
+| hue every 16 lines, so the credits text is striped with a scrolling rainbow.
+C ABB3
+C ABB4
+C ABB5
+C ABB6
+C ABB7
+C ABB8
+C ABBB
+C ABBD every 16 frames the starting hue moves on
+C ABBF
+C ABC1
+C ABC3
+C ABC5
+C ABC6
+C ABC8
+C ABCA
+C ABCC
+L ABCE DR_START
+C ABCE
+L ABD0 DR_GO
+C ABD0
+C ABD2 a frame has passed
+C ABD4 180 lines
+C ABD6
+C ABD8
+L ABDA DR_LINE
+C ABDA
+C ABDD
+C ABDF
+C ABE0
+C ABE2
+C ABE4
+C ABE5
+C ABE7
+C ABE9
+C ABEB
+L ABED DR_NEXT
+C ABED
+C ABEF
+C ABF1
+L ABF3 CREDITS_TEXT
+H ABF3
+| CREDITS_TEXT - (characters, x, y) for each line of the credits, drawn from TEXT_POOL
+| starting at "MINER 2049er" (the first line double height). 0 ends the list.
+D ABF3 AC14 byte 3
+L AC15 HIDE_PLAYERS
+H AC15
+| HIDE_PLAYERS - zero GTIA registers 0-12: positions of players and missiles, sizes.
+C AC15
+C AC17
+L AC19 HP_LOOP
+C AC19
+C AC1B
+C AC1C
+C AC1D
+C AC1F
+L AC20 PREPARE_SCREEN
+H AC20
+| PREPARE_SCREEN - show "MINER n / PREPARE FOR / STATION n / ZONE n" (built in RAM from
+| the text at PREP_TEXT and the display list NAME_DLIST), start its VBI and a 3-second
+| countdown, clear P/M memory and build the (still invisible) game screen.
+| The credits screen instead gets BLANK_VBI.
+C AC20
+C AC23
+C AC25
+C AC27
+C AC29
+C AC2B
+C AC2D
+L AC30 PS_TEXT
+C AC30 "MINER 1" / "Prepare for" text
+L AC32 PS_TEXT_LOOP
+C AC32
+C AC35
+C AC38
+C AC39
+C AC3B copy the display list to $0978
+L AC3D PS_DL_LOOP
+C AC3D
+C AC40
+C AC43
+C AC44
+C AC46 and adjust it: the station line gets fine scrolling (centring)
+C AC48
+C AC4B
+C AC4D
+C AC50 player number
+C AC52
+C AC53
+C AC55
+C AC58 two-digit station?
+C AC5A
+C AC5C
+C AC5E "STATION 10" layout
+L AC60 PS_TEXT10
+C AC60
+C AC63
+C AC66
+C AC67
+C AC69 the units digit, in colour 2
+C AC6B
+C AC6C
+C AC6E
+C AC71 zone digits will go at $095C
+C AC73
+C AC75
+L AC78 PS_ONE_DIGIT
+C AC78 one-digit station: centre that line too
+C AC7B
+L AC7D PS_TEXT1
+C AC7D
+C AC80
+C AC83
+C AC84
+C AC86 the digit, in colour 2
+C AC88
+C AC89
+C AC8B
+C AC8E zone digits will go at $0960
+C AC90
+L AC92 PS_ZONE
+C AC92
+C AC94
+C AC96 zone in decimal, digits in colour 3 ($D0 = '0')
+C AC98
+C AC9A
+C AC9C
+L AC9E PS_HUNDREDS
+C AC9E
+C ACA0
+C ACA2
+C ACA4
+C ACA6
+L ACA8 PS_TENS
+C ACA8
+C ACAA
+C ACAC
+C ACAE
+C ACB0
+L ACB2 PS_UNITS
+C ACB2
+C ACB4
+C ACB6 "Zone" (4 characters)
+C ACB8
+C ACBA
+C ACBC how many digits, and where to start (centred)
+C ACBE
+C ACC0
+C ACC2
+C ACC4
+C ACC5
+C ACC7
+C ACC9
+C ACCB
+C ACCC
+C ACCD
+C ACCF
+L ACD2 PS_WRITE
+C ACD2
+C ACD4
+L ACD6 PS_ZONE_WORD
+C ACD6
+C ACD9
+C ACDB
+C ACDC
+C ACDD
+C ACDF
+C ACE1 a space
+C ACE2
+L ACE4 PS_ZONE_DIGIT
+C ACE4
+C ACE6
+C ACE8
+C ACE9
+C ACEA
+C ACEC
+C ACEE countdown step: 30 frames
+C ACF0
+C ACF2 VBI = PREP_VBI
+C ACF4
+L ACF6 PS_START
+C ACF6
+C ACF9 6 x 30 frames = 3 seconds
+C ACFB
+C ACFD VBI only
+C ACFF
+C AD02 silence
+C AD05 400/800: PIA port A all inputs (joysticks)
+C AD07
+C AD09 PACTL bit 2 = 0: PORTA addresses the direction register
+C AD0B
+C AD0E all inputs
+C AD11 back to the data register
+C AD13
+L AD16 PS_PM
+C AD16 PMBASE = 3; in single-line mode ANTIC ignores the low 3 bits, so P/M memory
+C AD18   starts at $0000: missiles $0300, players $0400 $0500 $0600 $0700
+C AD1B clear $0300-$07FF
+C AD1D
+C AD1F
+C AD21
+C AD23
+C AD25
+C AD28 build the game display list and clear the screen
+L AD2B DRAW_CREDITS
+H AD2B
+| DRAW_CREDITS - draw the credits text from CREDITS_TEXT in colour 1.
+C AD2B
+C AD2D
+C AD2F
+C AD31
+C AD33 the first line double height
+L AD35 DCR_LINE
+C AD35
+C AD37
+C AD38 characters (0 = end)
+C AD3B
+C AD3D
+L AD3E DCR_DRAW
+C AD3E
+C AD40 x
+C AD43
+C AD45 y
+C AD48
+C AD49
+C AD4A
+C AD4B
+C AD4D
+C AD4E
+C AD51
+C AD52 the rest normal height
+C AD54
+L AD56 START_STATION
+H AD56
+| START_STATION - choose the station's colours, reset the per-turn variables, wait for
+| the prepare countdown, then switch on the game interrupts and let Bob go.
+|
+| Colours: three random hues for pixel colours 1-3, all different, and three random
+| brightnesses from {4, 6, 8}, also all different. Different brightness keeps items,
+| ladders and girders distinguishable on a black-and-white TV.
+C AD56
+C AD58
+L AD5A SS_CLEAR
+C AD5A keep only the hues of the old colours (so they can be compared)
+C AD5C
+C AD5E
+C AD60
+C AD61
+L AD63 SS_HUE
+C AD63 random hue ...
+C AD65
+C AD67
+C AD69
+C AD6B
+L AD6D SS_HUE_CHK
+C AD6D ... not used by another colour
+C AD6F
+C AD71
+C AD73
+C AD75
+C AD76
+L AD78 SS_LUM
+C AD78 random brightness 4, 6 or 8 ...
+C AD7A
+C AD7C
+C AD7E
+C AD7F
+C AD81
+C AD83
+L AD85 SS_LUM_CHK
+C AD85 ... not used by another colour
+C AD87
+C AD89
+C AD8B
+C AD8D
+C AD8E
+C AD90
+C AD92
+C AD94
+C AD96
+C AD99
+C AD9B
+C AD9D credits: colour 1 black (the text starts hidden) and draw the text
+C AD9F
+C ADA1
+C ADA3
+C ADA5
+C ADA7
+L ADAA SS_PRIOR
+C ADAA X = 8: (pCOLPF1,x) = (pPRIOR): PRIOR = $31 = players in front, fifth player
+C ADAC   (missiles take COLPF3), multicolour players
+C ADAE
+C ADB0
+C ADB2
+C ADB4
+C ADB6 missile rows $20-$27: the box behind the bonus on the status line
+L ADB8 SS_BOX
+C ADB8
+C ADBB
+C ADBC
+L ADBE SS_VARS
+C ADBE status line steady for 30 frames
+C ADC0
+C ADC2 clear START_DLY .. HIT_P3
+C ADC4
+L ADC6 SS_CLR
+C ADC6
+C ADC8
+C ADC9
+C ADCB per-turn state = 0
+C ADCC
+C ADCE
+C ADD0
+C ADD2
+C ADD4
+C ADD6
+C ADD8
+C ADDA
+C ADDC
+C ADDF
+C ADE1
+C ADE3
+C ADE5
+C ADE7
+C ADE9
+C ADEB
+C ADED = 1
+C ADEE
+C ADF0
+C ADF2
+C ADF4
+C ADF6 = 2
+C ADF7
+C ADF9
+C ADFB
+C ADFD
+C ADFF
+C AE01
+C AE03 the end-of-station wipe starts at display-list line 184
+C AE05
+C AE07 first demo input lasts this long
+C AE09
+C AE0B
+C AE0D Bob's colours
+C AE10 status line
+L AE13 SS_WAIT
+C AE13 wait for the prepare countdown
+C AE15
+C AE17 Bob may not move yet
+C AE19 NMIs off while the vectors change
+C AE1C DLI = DLI_MUTANTS
+C AE1E
+C AE20
+C AE23 VBI = GAME_VBI
+C AE25
+C AE27
+C AE2A clear collisions
+C AE2C
+C AE2E DLI + VBI on
+C AE30
+C AE33 one second of quiet (GAME_VBI counts FRAMES up)
+L AE35 SS_PAUSE
+C AE35
+C AE38
+C AE3A
+C AE3C go!
+C AE3E
+C AE40 take a life at the start of the turn (once)
+C AE42
+C AE44
+C AE46
+L AE48 SS_RTS
+C AE48
+L AE49 DRAW_STATUS
+H AE49
+| DRAW_STATUS - the status line: player 1's score and lives at the left; in a two-player
+| game player 2's score and lives at the right. The current player's score is written with bit 7 set,
+| so that CHACTL bit 0 (blank such characters) makes it blink.
+| Lives are shown as balls (internal code $54, ATASCII ball).
+C AE49 nothing on the credits screen
+C AE4B
+C AE4D
+C AE4F player 1's score at column 1
+C AE51
+C AE53
+C AE56 his lives after it, left to right
+C AE58
+C AE5A
+C AE5D
+C AE5F
+C AE61 player 2's score from column 32, right-aligned
+C AE63
+C AE65
+C AE68 his lives to the left of it, right to left
+C AE6A
+C AE6B
+C AE6D
+L AE6F DRAW_LIVES
+C AE6F
+C AE71 lives of this player
+C AE73
+C AE75
+C AE77
+L AE7A DLV_CURRENT
+C AE7A
+L AE7C DLV_START
+C AE7C a blank, then one ball per life, then a blank
+C AE7D
+C AE7F
+L AE81 DLV_BALL
+C AE81
+C AE83
+C AE84
+L AE86 DLV_PUT
+C AE86
+C AE89
+C AE8A
+C AE8B
+C AE8D
+C AE8E
+C AE8F
+C AE91
+C AE92
+L AE95 DS_RTS
+C AE95
+L AE96 DRAW_SCORE
+H AE96
+| DRAW_SCORE - player A's score on the status line from column Y: six digits, leading
+| zeros blank (player 1 left-justified, player 2 right-justified), a comma after the
+| thousands, "0" for no score. Leaves PLOT_X = column of the first character printed.
+C AE96
+C AE98 current player: bit 7 set ($90), blinked off by CHACTL bit 0 ...
+C AE9A
+C AE9C ... the other: normal ($10)
+C AE9E
+C AEA0
+L AEA2 DSC_CURRENT
+C AEA2
+C AEA4
+L AEA6 DSC_GO
+C AEA6
+C AEA8
+C AEAA
+C AEAC no digit printed yet
+C AEAE
+L AEB0 DSC_DIGIT
+C AEB0 digit X of zero page (X = SCORE or P2_DATA+4)
+C AEB2
+C AEB4
+C AEB6
+C AEB8 always print the last digit
+C AEBA
+C AEBC
+C AEBE leading zero: player 2 still moves along
+C AEBF
+C AEC0
+C AEC2
+C AEC3
+L AEC5 DSC_ZERO
+C AEC5
+L AEC7 DSC_OUT
+C AEC7
+C AEC8
+C AECA
+C AECD first digit printed?
+C AECF
+C AED1
+C AED3
+C AED5
+L AED7 DSC_ADV
+C AED7
+L AED8 DSC_NEXT
+C AED8
+C AED9
+C AEDB
+C AEDD after the thousands ...
+C AEDF
+C AEE1
+C AEE3 ... a comma, if any digit has been printed
+C AEE5
+C AEE7
+C AEE9
+C AEEA
+C AEEC
+C AEEF
+C AEF0
+L AEF2 DSC_NO_COMMA
+C AEF2
+C AEF3
+C AEF4
+C AEF6
+C AEF7
+L AEF9 AS_CARRY
+C AEF9 carry into the next digit up (lost beyond the 100,000s)
+C AEFA
+L AEFC ADD_SCORE
+H AEFC
+| ADD_SCORE - add A to score digit X (1 = 100,000s ... 4 = hundreds, 5 = tens,
+| 6 = units), carrying upwards. Awards the one extra life when the score first reaches
+| 10,000, and makes the status line hold still for two seconds.
+C AEFC
+C AEFE
+C AEFF
+L AF01 AS_DIV
+C AF01
+C AF03
+C AF05
+C AF07
+C AF08
+L AF0B AS_STORE
+C AF0B
+C AF0D
+C AF0E
+C AF10 extra life still to come, and 10,000 reached?
+C AF12
+C AF14
+C AF16
+C AF18
+C AF1A yes: start the jingle (XLIFE = 9) and add a life
+C AF1B
+C AF1D
+L AF1F AS_STEADY
+C AF1F
+C AF21
+C AF23
+C AF25
+C AF27
+C AF2A
+O AEFF SCORE-1,x
+O AF0B SCORE-1,x

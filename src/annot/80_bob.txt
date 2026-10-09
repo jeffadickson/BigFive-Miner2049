@@ -1,0 +1,1018 @@
+############################################################ Bounty Bob's movement
+L AF2B TRY_CLIMB_UP
+H AF2B
+| TRY_CLIMB_UP - stick pushed up: is Bob standing at the foot of a ladder?
+| A ladder entry is (height, x, y, style). Bob qualifies if his feet (BOB_Y + $15) are
+| level with the ladder's bottom (y + height) or one line above it, and his x within 2 of the ladder's.
+| He is then lined up with the ladder and starts climbing: frame 7, MOVE_A = lines to
+| the top, MOVE_B = lines above the bottom.
+C AF2B
+L AF2D TCU_LOOP
+C AF2D end of the ladder list: no ladder, treat as a plain stick movement
+C AF2F
+C AF31
+L AF34 TCU_ENTRY
+C AF34 bottom of the ladder = y + height
+C AF35
+C AF36
+C AF37
+C AF39 - feet line
+C AF3A
+C AF3C
+C AF3D
+C AF3F within 0-1 lines?
+C AF41
+C AF43
+C AF45 x within -2..+2?
+C AF46
+C AF48
+C AF49
+C AF4B
+C AF4C
+C AF4E
+C AF50
+C AF52 line up with the ladder and step on
+C AF54
+C AF56
+C AF58 climbing frame
+C AF5A
+C AF5C MOVE_A = height + 4 - offset = lines to the top
+C AF5D
+C AF5F
+C AF61
+C AF62
+C AF64
+C AF66 MOVE_B = 1
+C AF68
+C AF6A
+L AF6B LADDER_ON
+C AF6B footsteps off
+C AF6C
+C AF6E
+L AF71 TCU_NEXT_X
+C AF71
+L AF72 TCU_NEXT
+C AF72
+C AF73
+C AF74
+L AF77 TRY_CLIMB_DOWN
+H AF77
+| TRY_CLIMB_DOWN - stick pulled down: is Bob standing at the top of a ladder?
+| (feet within 2 lines of y + 4, x within 2). Then frame 10, MOVE_A = 1,
+| MOVE_B = lines to the bottom.
+C AF77
+L AF79 TCD_LOOP
+C AF79
+C AF7B
+C AF7D
+C AF7E
+C AF7F top of the ladder - Bob's feet - 4
+C AF81
+C AF82
+C AF84
+C AF85
+C AF87
+C AF89
+C AF8B
+C AF8D
+C AF8E
+C AF90
+C AF91
+C AF93
+C AF94
+C AF96
+C AF98
+C AF9A line up and step down
+C AF9C
+C AF9E
+C AFA0 frame 10 (stepping onto the ladder)
+C AFA2
+C AFA4
+C AFA6
+C AFA8 MOVE_B = height + 3 + offset = lines to the bottom
+C AFA9
+C AFAB
+C AFAD
+C AFAF
+C AFB1
+C AFB3
+L AFB6 TCD_NEXT_X
+C AFB6
+L AFB7 TCD_NEXT
+C AFB7
+C AFB8
+C AFB9
+L AFBC NO_LADDER
+C AFBC no ladder here: continue with left/right
+C AFBF
+C AFC0
+C AFC1
+L AFC4 MOVE_BOB
+H AFC4
+| MOVE_BOB - Bob's state machine, run every frame by GAME_VBI.
+|
+|   SPECIAL = 1 ........ dying: MELT_BOB
+|   SPECIAL = 2 ........ dead: nothing (GAME_VBI ends the turn)
+|   SPECIAL = 3-7 ...... in the transporter: TRANSPORT
+|   BOB_FALL ........... falling: FALLING
+|   SLIDE_LEN .......... sliding down a chute: SLIDING
+|   on a slide start ... begin a slide
+|   BOB_FRAME 11-12 .... jumping: JUMPING
+|   BOB_FRAME 7-10 ..... on a ladder: ON_LADDER
+|   otherwise .......... on a girder: button = jump, up/down = ladders,
+|                        left/right = walk, still in a transporter booth + digit = go
+C AFC4
+C AFC6
+C AFC8
+C AFCA
+C AFCC
+L AFCF MB_SPECIAL
+C AFCF
+C AFD1
+C AFD3
+L AFD6 MB_DEAD
+C AFD6
+L AFD7 MB_NORMAL
+C AFD7
+C AFD9
+C AFDB
+L AFDE MB_SLIDING
+C AFDE
+C AFE0
+C AFE2
+L AFE5 MB_SLIDE_CHECK
+C AFE5 is Bob exactly at the top of a slide?
+L AFE7 MBS_LOOP
+C AFE7 rows (0 = end of list)
+C AFE9
+C AFEB
+C AFEC
+C AFED
+C AFEF
+C AFF0
+C AFF2
+C AFF4
+C AFF6
+C AFF8
+C AFFA yes: slide for that many frames
+C AFFC
+C AFFD frame 11 (sliding right) or 12 (left)
+C AFFF
+C B001 MOVE_A = x step per frame
+C B003
+C B005
+L B006 MBS_FRAME
+C B006
+C B008 start 2 * step further back
+C B00A
+C B00B
+C B00D
+C B00E
+C B00F
+C B011
+C B013 slide noise
+L B016 MBS_NEXT
+C B016
+C B017
+C B018
+L B01A MB_FRAME
+C B01A jumping?
+C B01C
+C B01E
+C B020
+L B023 MB_LADDER_Q
+C B023 on a ladder?
+C B025
+C B027
+L B02A MB_GROUND
+C B02A button: carry clear = pressed
+C B02D
+C B02E
+C B030 not pressed: run the lock-out down
+C B032
+C B034
+C B036
+L B038 MB_BUTTON
+C B038 pressed: jump only on a fresh press (lock-out was 0)
+C B03A
+C B03C
+C B03E
+C B040 and not while inside the cannon
+C B042
+C B044
+L B047 MB_STICK
+C B047 stick bit 0 = up
+C B04A
+C B04B
+C B04D
+L B050 MB_STICK_DOWN
+C B050 bit 1 = down
+C B051
+C B053
+L B056 MB_STICK_LR
+C B056 bit 2 = left
+C B058
+C B05A
+C B05B
+C B05D
+L B060 MB_STICK_RIGHT
+C B060 bit 3 = right
+C B061
+C B063 standing still: inside a transporter booth?
+C B065
+C B066
+C B068
+C B06A
+C B06C on one of the four floors ($1D + 47 n)?
+C B06E
+L B070 MB_BOOTH
+C B070
+C B072
+C B074 a digit key 1-4 ...
+C B077
+C B079
+C B07B
+C B07D ... that is not this floor ...
+C B07F
+C B081
+C B083 ... and the transporter is not cooling down
+C B085
+C B087 go: start the transporter sequence
+C B089
+C B08B
+C B08D
+C B08F
+C B091
+C B093
+L B096 MB_BOOTH_NEXT
+C B096 next floor up
+C B097
+C B099
+C B09A
+L B09C MB_STILL
+C B09C
+L B09F WALK_RIGHT
+H B09F
+| WALK_RIGHT - walk animation frames 1-3, one pixel every other frame.
+| After moving, look at Bob's feet:
+|   girder 1 line above the feet  -> the girder rises: step up one line
+|   girder under the feet          -> fine
+|   girder 1 line below            -> the girder falls: step down
+|   nothing                         -> walk off the edge and start falling
+C B09F next walk frame (1-3)
+C B0A0
+C B0A2
+C B0A4
+L B0A6 WR_FRAME
+C B0A6
+C B0A8
+C B0AA move on even frames only
+C B0AC
+C B0AE
+C B0B0
+C B0B1 wall or screen edge?
+C B0B4
+C B0B6
+C B0B8 inside the cannon: no ground check
+C B0BA
+C B0BC girder one line above the feet, at x + 5?
+C B0BD
+C B0BE
+C B0C0
+C B0C1
+C B0C3
+C B0C6
+C B0C8 yes: step up
+C B0CA
+L B0CD WR_FEET
+C B0CD girder under the feet at x+3, x+4 or x+5?
+C B0CF
+C B0D1
+L B0D4 WR_FEET_LOOP
+C B0D4
+C B0D6
+C B0D8
+C B0DA
+C B0DC
+C B0DE
+C B0DF
+C B0E2
+L B0E5 WR_DOWN
+C B0E5 none: try one line lower
+C B0E7
+C B0EA found: step down
+C B0EC nothing: walked off, start to fall (frame 1)
+L B0EE START_FALL
+C B0EE
+C B0F0
+C B0F2
+C B0F4
+C B0F5
+L B0F7 FALL_SOUND
+C B0F7 X = $1E: (pCOLPM3,x) = (pAUDF3), (pCOLPF0,x) = (pAUDC3)
+C B0F9
+C B0FA
+C B0FC
+C B0FE
+C B100
+C B102
+L B104 FOOTSTEPS
+C B104 inside the cannon: a low rumble
+C B106
+C B108
+C B10A
+C B10C
+L B10E FS_STEP
+C B10E 14-frame cycle: thud (0-2), silence, click (7-9), silence
+C B110
+C B111
+C B113
+C B115
+L B117 FS_PHASE
+C B117
+C B119
+C B11B
+C B11D
+C B11F
+C B121
+C B123
+L B125 FS_QUIET
+C B125
+C B127
+L B129 FS_THUD
+C B129
+C B12B
+C B12D
+L B12F FS_CLICK
+C B12F
+C B131
+L B133 FS_SET
+C B133
+C B134
+C B136
+L B138 FS_VOL
+C B138
+C B139
+C B13B
+L B13D FS_DONE
+C B13D
+L B140 WALK_LEFT
+H B140
+| WALK_LEFT - as WALK_RIGHT, frames 4-6, feet tested at x+2..x+4.
+C B140
+C B141
+C B143
+C B145
+L B147 WL_FRAME
+C B147
+C B149
+C B14A
+C B14B
+C B14D
+C B14F
+C B151
+C B153
+C B155
+C B156 wall or screen edge?
+C B159
+C B15B
+C B15D
+C B15F
+C B161 girder one line above the feet, at x + 2?
+C B162
+C B163
+C B164
+C B165
+C B167
+C B16A
+C B16C step up
+C B16E
+L B171 WL_FEET
+C B171
+C B173
+C B175
+C B177
+C B178
+C B179
+L B17C WL_FEET_LOOP
+C B17C
+C B17E
+C B180
+C B182
+C B184
+C B186
+C B187
+C B18A
+L B18D WL_DOWN
+C B18D
+C B18F
+C B191
+C B192
+C B193
+C B196
+C B198
+L B19B WL_FALL
+C B19B walked off: fall, facing left (frame 4)
+C B19D
+L B1A0 PROBE_FEET3
+H B1A0
+| PROBE_FEET - is there girder (colour 3) at x = Y, line = BOB_Y + A?
+| PROBE_FEET3: x = BOB_X + 3, line = feet. PROBE_FEET: x in Y, line = BOB_Y + $15.
+| PROBE_AT: line in X. PROBE_AT_Y: x in Y, line already in PROBE_Y.
+| Out: Z set = solid. Station 8's lift counts as solid where Bob's feet meet its
+| platform; ON_LIFT is set to 0 there.
+C B1A0
+C B1A2
+C B1A3
+C B1A4
+L B1A5 PROBE_FEET
+C B1A5
+L B1A7 PROBE_LINE
+C B1A7
+C B1A8
+C B1AA
+L B1AB PROBE_AT
+C B1AB
+L B1AD PROBE_AT_Y
+C B1AD
+C B1AF girder?
+C B1B2
+C B1B4 no: the lift's platform? (only at the feet line)
+C B1B6
+C B1B7
+C B1B9
+C B1BB
+C B1BD
+C B1BF
+C B1C1
+C B1C3
+C B1C5
+C B1C7
+C B1C9
+C B1CB
+C B1CD
+L B1CF PR_NONE
+C B1CF
+C B1D1
+L B1D3 PR_LIFT
+C B1D3 on the lift
+C B1D5
+C B1D7 Z set
+C B1D9
+L B1DB PR_RTS
+C B1DB
+L B1DC PR_SET
+C B1DC
+C B1DE
+L B1DF TRANSPORT
+H B1DF
+| TRANSPORT - the transporter, SPECIAL = 3..7, with a random buzz on voice 3:
+|   3  Bob fades into sparkles while the buzz gets louder
+|   4  a short pause
+|   5  Bob appears at the chosen floor; the sparkles at the old booth die away
+|   6  sparkle for a moment at the new booth
+|   7  Bob forms again while the buzz fades; the transporter is then locked for a while
+C B1DF random buzz
+C B1E1
+C B1E3
+C B1E5
+C B1E7
+C B1E9
+C B1EA
+C B1EB
+C B1EC
+C B1EE
+C B1EF
+C B1F1
+C B1F2
+C B1F4
+L B1F7 TR_7Q
+C B1F7
+C B1F8
+C B1FA
+L B1FD TR_ARRIVE
+C B1FD state 7: slow down the sparkle, quieter each step
+C B1FF
+C B201
+C B203
+C B205
+C B207
+C B209
+C B20A
+C B20C
+C B20D
+C B20F X = 5: (pAUDF2+1,x) = (pAUDC3)
+C B211
+C B213 fully formed?
+C B215
+C B217 lock the transporter (TRANS_LOCK = 5) and return to normal
+C B219
+C B21B
+L B21D TR_SHOW
+C B21D
+L B220 TR_SPARKLE
+C B220
+L B223 TR_FADE
+C B223 state 3: fade out, louder each step
+C B225
+C B227
+C B229
+C B22B
+C B22D
+C B22F
+C B231
+C B232
+C B234
+C B235
+C B237
+C B239
+C B23B
+L B23D TR_GONE
+C B23D gone: state 4 for 8 frames
+C B23F
+C B241
+C B243
+C B245
+L B247 TR_PAUSE
+C B247 state 4
+C B249
+C B24B remember the old height
+C B24D
+C B24F state 5
+C B251
+C B253
+C B255
+C B257 new height = $D9 - 47 * floor
+C B259
+L B25B TR_FLOOR
+C B25B
+C B25C
+C B25E
+C B25F
+C B261
+C B263
+L B265 TR_OLD_BOOTH
+C B265 state 5: sparkle at the old booth (BOB_Y briefly set back)
+C B267
+C B268
+C B26A
+C B26C
+C B26F
+C B270
+C B272
+C B274
+C B276
+C B278
+C B27A
+C B27C done: wipe the old image from players 0-2
+C B27E
+C B27F
+C B281
+C B282
+C B284
+L B286 TR_WIPE0
+C B286
+C B289
+C B28A
+C B28B
+C B28D
+L B28F TR_WIPE1
+C B28F
+C B292
+C B293
+C B294
+C B296
+L B298 TR_WIPE2
+C B298
+C B29B
+C B29C
+C B29D
+C B29F state 6 for 8 frames
+C B2A1
+C B2A3
+C B2A5
+C B2A7
+L B2AA BOB_COLOURS
+H B2AA
+| BOB_COLOURS - Bob's three colours: player 0 blue ($8A), player 1 orange ($3A),
+| player 2 white ($0F).
+C B2AA
+C B2AC
+C B2AE
+C B2B0
+C B2B2
+C B2B4
+C B2B6
+C B2B8
+L B2B9 TR_NEW_BOOTH
+C B2B9 state 6
+C B2BB
+C B2BD
+L B2C0 TR_TO_7
+C B2C0 state 7
+C B2C2
+C B2C4
+C B2C6
+C B2C8
+C B2C9
+C B2CB
+L B2CE SLIDING
+H B2CE
+| SLIDING - one line down and MOVE_A pixels sideways per frame, with a falling whistle (AUDF3 rises),
+| until SLIDE_LEN runs out.
+C B2CE
+C B2D0
+C B2D2
+C B2D4
+C B2D5
+C B2D7
+C B2D9
+C B2DB
+C B2DD
+C B2DF every second frame the whistle drops a step
+C B2E1
+C B2E3
+L B2E5 SL_COUNT
+C B2E5
+C B2E7
+C B2E9 end of the slide: sound to a low hiss
+C B2EB
+C B2ED
+C B2EF
+C B2F1 standing frame facing the same way (1 or 4)
+C B2F3
+C B2F5
+C B2F7
+C B2F9
+L B2FB SL_FRAME
+C B2FB
+L B2FD SL_SHOW
+C B2FD
+L B300 MELT_BOB
+H B300
+| MELT_BOB - SPECIAL = 1: Bob melts. Each frame a random byte is fed in at his feet in
+| each of his three players and the column above is shifted down a line, from the feet
+| up to MOVE_B; MOVE_B moves down one line per frame. When it reaches BOB_Y + $11 (his shins) he is a
+| puddle of noise and SPECIAL becomes 2 (dead).
+C B300 feet line
+C B302
+C B303
+C B305
+C B307 player 0 ($041F + row)
+C B309
+C B30B
+C B30E player 1
+C B310
+C B312
+C B315 player 2
+C B317
+C B319
+C B31C
+C B31E
+C B320
+C B321
+C B323
+C B325
+C B327 melted: dead
+C B329
+L B32B MELT_SHOW
+C B32B
+L B32E MELT_COLUMN
+C B32E
+C B330
+C B332
+C B334
+C B336 X = 0: (pSKRES,x) = RANDOM
+C B338
+L B33A MELT_SHIFT
+C B33A
+C B33B
+C B33C
+C B33E
+C B33F
+C B341
+C B343
+C B345
+L B346 ON_LADDER
+H B346
+| ON_LADDER - climbing, one line every other frame. MOVE_A = lines to the top,
+| MOVE_B = lines to the bottom; reaching either end puts Bob back on his feet (frame 0).
+| Frames: 7/8 alternate while climbing, 9 and 10 near the top as he steps on and off.
+C B346
+C B348
+C B34A
+L B34C OL_RTS
+C B34C
+L B34D OL_MOVE
+C B34D
+C B350 up?
+C B351
+C B353 down?
+C B354
+C B356 down a line
+C B358
+C B35A
+C B35C
+L B35E OL_FRAME
+C B35E near the top?
+C B360
+C B362
+C B364 3-4 lines from the top: frame 9; 1-2: frame 10
+C B366
+C B368
+C B36A
+C B36B
+L B36D OL_CLIMB
+C B36D alternate frames 7 and 8 every 2 frames
+C B36F
+C B371
+C B373
+C B375
+C B377
+C B379
+C B37B
+L B37C OL_SET
+C B37C
+L B37E OL_SHOW
+C B37E
+L B381 OL_UP
+C B381 up a line
+C B383
+C B385
+C B387
+L B389 OL_OFF
+C B389 off the ladder
+C B38B
+L B38D CHECK_LEFT
+H B38D
+| CHECK_LEFT / CHECK_RIGHT - may Bob move to x = X?  Out: A = 0 (Z set) if blocked.
+| The screen edges ($30 and $C9), the walls of station 6's waste box (x $43/$BD and
+| $3B/$B5 below line $8A), the TNT store on station 10 (x $31/$5D, lines $4B-$A8), and
+| on station 10 inside the cannon (x $71-$A5).
+C B38D left edge
+C B38F
+C B391 inside the cannon?
+C B393
+C B395
+C B397
+C B399
+C B39B
+C B39D
+C B39F station 6: the waste box's walls
+C B3A1
+C B3A3
+C B3A5
+C B3A7
+C B3A9
+C B3AB
+L B3AD CK_WASTE_Y
+C B3AD only at the box's height
+C B3AF
+C B3B1
+C B3B3
+C B3B5
+L B3B7 CK_BLOCKED
+C B3B7
+C B3B9
+L B3BA CK_CANNON_L
+C B3BA
+C B3BC
+C B3BE
+L B3C0 CK_TNT_L
+C B3C0 station 10: the TNT store's walls
+C B3C2
+C B3C4
+C B3C6
+C B3C8
+C B3CA
+C B3CC
+L B3CE CK_TNT_Y
+C B3CE
+C B3D0
+C B3D2
+L B3D4 CHECK_RIGHT
+C B3D4 right edge
+C B3D6
+C B3D8
+C B3DA
+C B3DC
+C B3DE
+C B3E0
+C B3E2
+C B3E4
+C B3E6
+C B3E8
+C B3EA
+C B3EC
+C B3EE
+C B3F0
+C B3F2
+L B3F4 CK_OK
+C B3F4
+L B3F6 CK_RTS
+C B3F6
+L B3F7 CK_TNT_R
+C B3F7
+C B3F9
+C B3FB
+C B3FD
+C B3FF
+C B401
+C B403
+L B405 CK_TNT_WALL
+C B405 blocked, and a jump stops moving sideways
+C B407
+C B409
+L B40A CK_CANNON_R
+C B40A
+C B40C
+C B40E
+L B410 START_JUMP
+H B410
+| START_JUMP - button pressed: begin a jump. MOVE_A = 0 (position in JUMP_ARC), MOVE_B =
+| -1/0/+1 from the stick, frame 11 or 12 depending on the way he faces.
+C B410
+C B412
+C B414
+C B416 jump sound
+C B418
+C B41A
+C B41C
+C B41E
+C B420 direction from the stick: left -1, right +1, else 0
+C B423
+C B424
+C B425
+C B427
+C B428
+C B42A
+C B42B
+C B42C
+C B42E
+L B42F SJ_DIR
+C B42F
+C B431 frame 11, or 12 if facing left
+C B433
+C B435
+C B437
+C B439
+L B43A SJ_FRAME
+C B43A
+L B43C JUMPING
+H B43C
+| JUMPING - every other frame move MOVE_B sideways (unless blocked); every frame move
+| vertically by JUMP_ARC[MOVE_A]: 16 lines up with two short hovers, then down. Past
+| the end of the table Bob falls one line per frame until he lands.
+| On station 10 two spots jump straight to the falling part (index $29): the top of
+| the TNT store and the cannon's platform, so Bob cannot jump out of them.
+C B43C
+C B43E
+C B440
+C B442
+C B444
+C B445
+C B447
+C B448
+C B44A
+C B44C
+C B44F
+L B452 JP_RIGHT
+C B452
+L B455 JP_MOVE
+C B455
+C B457
+L B459 JP_VERTICAL
+C B459
+C B45B
+C B45D
+C B45F
+C B461
+C B463
+C B465
+C B467
+C B469
+C B46B
+C B46D
+C B46F
+C B471
+C B473
+L B475 JP_TNT
+C B475
+C B477
+C B479
+C B47B
+C B47D
+C B47F
+L B481 JP_ARC
+C B481
+C B484 past the table: +1
+C B486
+C B488
+L B48A JP_APPLY
+C B48A
+C B48B
+C B48D
+C B48E
+C B490
+C B492 sound: pitch up while rising (index < $16) ...
+C B494
+C B496
+C B498 ... falling whistle after $2A ...
+C B49A
+C B49C ... else pitch down
+C B49D
+C B49E
+C B49F
+C B4A0
+C B4A2
+C B4A4
+C B4A6
+C B4A8
+C B4AA
+L B4AC JP_RISING
+C B4AC
+C B4AD
+C B4AE
+C B4AF
+C B4B0
+C B4B2
+C B4B4
+C B4B6
+L B4B8 FALLING
+H B4B8
+| FALLING - one line down per frame with a falling whistle; then the landing test.
+C B4B8
+L B4BA FA_SOUND
+C B4BA
+C B4BC
+C B4BE
+C B4C0
+C B4C2
+C B4C4
+C B4C6
+C B4C8
+C B4CA
+L B4CC LAND_CHECK
+H B4CC
+| LAND_CHECK - count the fall; if there is girder under x+3 or x+4 (and not 2 lines
+| higher, which would mean his feet are already inside it), land, lifting Bob one line
+| if needed. Forty or more frames of falling (FALL_LEN) kill him.
+C B4CC
+C B4CE
+C B4D1
+C B4D3
+C B4D5
+C B4D7
+C B4D8
+C B4DB
+L B4DD LC_SOLID
+C B4DD solid 2 lines up as well? still going through: carry on
+C B4DF
+C B4E1
+C B4E2
+C B4E3
+C B4E6
+C B4E8 solid 1 line below the feet as well? then he is a line too low: up one
+C B4EA
+C B4EC
+C B4ED
+C B4F0
+C B4F2
+L B4F4 LC_LANDED
+C B4F4
+C B4F6
+C B4F8 fallen for 40 frames or more?
+C B4FA
+C B4FC
+C B4FE
+L B501 START_DEATH
+H B501
+| START_DEATH - Bob dies: SPECIAL = 1 (MELT_BOB), melt starts at his top line, with a
+| decaying tone on voice 3.
+C B501 X = 1 for the (pointer,x) tricks below
+C B503
+C B505
+C B507
+C B509 (pAUDF3+1,x) = (pAUDC3): pure tone, volume 15
+C B50B
+C B50D decays via SND3_VOL
+C B50F
+C B511 (pAUDC2+1,x) = (pAUDF3)
+C B513
+L B515 SD_RTS
+C B515
+L B516 LC_SAFE
+C B516 meant to silence voice 3 like START_DEATH, but X = 0 here, so (pAUDF3+1,x)
+C B518   takes bytes $59/$5A (AUDF3's high byte, AUDC3's low byte) as the pointer: $05D2
+C B519   ($05E8 on the 5200), a line of player 1 - harmless, Bob is redrawn every frame
+C B51B standing frame facing the same way
+C B51D
+C B51F
+C B521
+C B523
+C B525
+C B527
+L B529 LC_FRAME
+C B529
+L B52B LC_SHOW
+C B52B

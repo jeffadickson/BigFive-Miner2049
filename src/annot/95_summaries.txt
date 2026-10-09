@@ -1,0 +1,37 @@
+# one-line descriptions of secondary entry points, used to comment the calls to them
+Y 940B copy 6 rows of the '5' glyph into both P/M buffers at row X
+Y 948A X blank lines in the column being drawn
+Y 9488 8 blank lines in the column being drawn
+Y 9493 the 8 lines of the '5' glyph in the column being drawn
+Y 9A83 set pixel (x = Y, line = X) to PLOT_COLOR
+Y 9A81 set pixel (x = Y, line = PLOT_Y) to PLOT_COLOR
+Y 9A8D set pixel x = Y on the line already in PTR
+Y 9A4F x back 4 pixels, one line down
+Y 9A3D 4 pixels at (PLOT_X, PLOT_Y), moving right
+Y 99BC horizontal line: line = PLOT_X, from x = Y, A pixels
+Y 9BE1 2-pixel-wide post, 31 lines, at pixel x = X
+Y A417 draw the tens digit A at x = $60
+Y A405 draw the units digit A at x = $68
+Y 99DC continue drawing girders with slope A
+Y A845 clear CNT2 lines of PLOT_Y bytes at (CNT0)
+Y A06A draw A characters of TEXT_POOL at TXT_X, line Y
+Y AE6F lives of player A as balls, from column Y, step X
+Y B1A7 girder at x = Y, line BOB_Y + A?
+Y B1AD girder at x = Y, line PROBE_Y?
+Y B1A5 girder at x = Y, line BOB_Y + $15 (the feet)?
+Y B1AB girder at x = Y, line X?
+Y B220 draw Bob as sparkles
+Y B32E melt one of Bob's players (page Y)
+Y B3D4 may Bob move right to x = X?
+Y B38D may Bob move left to x = X?
+Y 9ABF colour of pixel x = Y on the line in PIX_PTR
+Y B9BD current byte of the demo recording
+Y 9AAB colour of pixel x = Y, line X
+Y A0E8 station 10: hide Bob's legs inside the loaded cannon
+Y 9FD2 rails and sleepers from x = A
+Y B1A0 is there girder under Bob's feet at x = BOB_X + 3?
+O A452 P2_DATA+4,x
+C A452 player 2's digit
+O AEB0 0,x
+O B70B HIT_P3-1,x
+O BBDE (pGRACTL-$3E,x)

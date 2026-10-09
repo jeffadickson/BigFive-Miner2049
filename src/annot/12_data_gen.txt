@@ -1,0 +1,309 @@
+############################################################ data: generated layout (shapes and station lists)
+L 84C5 ITEM_SHAPES
+H 84C5
+| ITEM_SHAPES - addresses of the 37 item pictures (index = item shape number). Entries
+| 33-36 (the goblet and the three TNT bundles) are the first 8 bytes of STATION_TABLE,
+| whose entry 0 is never used as a station: the two tables overlap.
+|   1-5   the points numbers "100" .. "500"       11  "1100"      26  the "BF" logo
+D 84C5 8506 word 8
+L 86EF ITEM_1
+H 86EF
+| item shape 1 - "100": 11 x 5 pixels, worth 100 points
+D 86EF 86F1 byte 3
+C 86EF width, height, points (also the shape number of the points picture)
+D 86F2 8700 gfx2 3
+L 8701 ITEM_2
+H 8701
+| item shape 2 - "200": 11 x 5 pixels, worth 100 points
+D 8701 8703 byte 3
+C 8701 width, height, points (also the shape number of the points picture)
+D 8704 8712 gfx2 3
+L 8713 ITEM_3
+H 8713
+| item shape 3 - "300": 11 x 5 pixels, worth 100 points
+D 8713 8715 byte 3
+C 8713 width, height, points (also the shape number of the points picture)
+D 8716 8724 gfx2 3
+L 8725 ITEM_4
+H 8725
+| item shape 4 - "400": 11 x 5 pixels, worth 100 points
+D 8725 8727 byte 3
+C 8725 width, height, points (also the shape number of the points picture)
+D 8728 8736 gfx2 3
+L 8737 ITEM_5
+H 8737
+| item shape 5 - "500": 11 x 5 pixels, worth 100 points
+D 8737 8739 byte 3
+C 8737 width, height, points (also the shape number of the points picture)
+D 873A 8748 gfx2 3
+L 8749 ITEM_6
+H 8749
+| item shape 6: 7 x 6 pixels, worth 100 points
+D 8749 874B byte 3
+C 8749 width, height, points (also the shape number of the points picture)
+D 874C 8757 gfx2 2
+L 8758 ITEM_7
+H 8758
+| item shape 7: 4 x 11 pixels, worth 200 points
+D 8758 875A byte 3
+C 8758 width, height, points (also the shape number of the points picture)
+D 875B 8765 gfx2 1
+L 8766 ITEM_8
+H 8766
+| item shape 8: 7 x 5 pixels, worth 100 points
+D 8766 8768 byte 3
+C 8766 width, height, points (also the shape number of the points picture)
+D 8769 8772 gfx2 2
+L 8773 ITEM_9
+H 8773
+| item shape 9: 8 x 9 pixels, worth 500 points
+D 8773 8775 byte 3
+C 8773 width, height, points (also the shape number of the points picture)
+D 8776 8787 gfx2 2
+L 8788 ITEM_10
+H 8788
+| item shape 10: 8 x 6 pixels, worth 100 points
+D 8788 878A byte 3
+C 8788 width, height, points (also the shape number of the points picture)
+D 878B 8796 gfx2 2
+L 8797 ITEM_11
+H 8797
+| item shape 11 - "1100": 12 x 5 pixels, worth 000 points
+D 8797 8799 byte 3
+C 8797 width, height, points (also the shape number of the points picture)
+D 879A 87A8 gfx2 3
+L 87A9 ITEM_12
+H 87A9
+| item shape 12: 8 x 6 pixels, worth 300 points
+D 87A9 87AB byte 3
+C 87A9 width, height, points (also the shape number of the points picture)
+D 87AC 87B7 gfx2 2
+L 87B8 ITEM_13
+H 87B8
+| item shape 13: 4 x 9 pixels, worth 100 points
+D 87B8 87BA byte 3
+C 87B8 width, height, points (also the shape number of the points picture)
+D 87BB 87C3 gfx2 1
+L 87C4 ITEM_14
+H 87C4
+| item shape 14: 8 x 12 pixels, worth 400 points
+D 87C4 87C6 byte 3
+C 87C4 width, height, points (also the shape number of the points picture)
+D 87C7 87DE gfx2 2
+L 87DF ITEM_15
+H 87DF
+| item shape 15: 5 x 21 pixels, worth 200 points
+D 87DF 87E1 byte 3
+C 87DF width, height, points (also the shape number of the points picture)
+D 87E2 880B gfx2 2
+L 880C ITEM_16
+H 880C
+| item shape 16: 10 x 14 pixels, worth 200 points
+D 880C 880E byte 3
+C 880C width, height, points (also the shape number of the points picture)
+D 880F 8838 gfx2 3
+L 8839 ITEM_17
+H 8839
+| item shape 17: 6 x 13 pixels, worth 200 points
+D 8839 883B byte 3
+C 8839 width, height, points (also the shape number of the points picture)
+D 883C 8855 gfx2 2
+L 8856 ITEM_18
+H 8856
+| item shape 18: 8 x 12 pixels, worth 300 points
+D 8856 8858 byte 3
+C 8856 width, height, points (also the shape number of the points picture)
+D 8859 8870 gfx2 2
+L 8871 ITEM_19
+H 8871
+| item shape 19: 8 x 6 pixels, worth 100 points
+D 8871 8873 byte 3
+C 8871 width, height, points (also the shape number of the points picture)
+D 8874 887F gfx2 2
+L 8880 ITEM_20
+H 8880
+| item shape 20: 8 x 4 pixels, worth 100 points
+D 8880 8882 byte 3
+C 8880 width, height, points (also the shape number of the points picture)
+D 8883 888A gfx2 2
+L 888B ITEM_21
+H 888B
+| item shape 21: 8 x 17 pixels, worth 400 points
+D 888B 888D byte 3
+C 888B width, height, points (also the shape number of the points picture)
+D 888E 88AF gfx2 2
+L 88B0 ITEM_22
+H 88B0
+| item shape 22: 8 x 4 pixels, worth 200 points
+D 88B0 88B2 byte 3
+C 88B0 width, height, points (also the shape number of the points picture)
+D 88B3 88BA gfx2 2
+L 88BB ITEM_23
+H 88BB
+| item shape 23: 8 x 12 pixels, worth 300 points
+D 88BB 88BD byte 3
+C 88BB width, height, points (also the shape number of the points picture)
+D 88BE 88D5 gfx2 2
+L 88D6 ITEM_24
+H 88D6
+| item shape 24: 10 x 12 pixels, worth 300 points
+D 88D6 88D8 byte 3
+C 88D6 width, height, points (also the shape number of the points picture)
+D 88D9 88FC gfx2 3
+L 88FD ITEM_25
+H 88FD
+| item shape 25: 11 x 8 pixels, worth 200 points
+D 88FD 88FF byte 3
+C 88FD width, height, points (also the shape number of the points picture)
+D 8900 8917 gfx2 3
+L 8918 ITEM_26
+H 8918
+| item shape 26 - the "BF" (Big Five) logo: 9 x 7 pixels, worth 1100 points
+D 8918 891A byte 3
+C 8918 width, height, points (also the shape number of the points picture)
+D 891B 892F gfx2 3
+L 8930 ITEM_27
+H 8930
+| item shape 27: 9 x 9 pixels, worth 200 points
+D 8930 8932 byte 3
+C 8930 width, height, points (also the shape number of the points picture)
+D 8933 894D gfx2 3
+L 894E ITEM_28
+H 894E
+| item shape 28: 11 x 10 pixels, worth 300 points
+D 894E 8950 byte 3
+C 894E width, height, points (also the shape number of the points picture)
+D 8951 896E gfx2 3
+L 896F ITEM_29
+H 896F
+| item shape 29: 9 x 20 pixels, worth 500 points
+D 896F 8971 byte 3
+C 896F width, height, points (also the shape number of the points picture)
+D 8972 89AD gfx2 3
+L 89AE ITEM_30
+H 89AE
+| item shape 30: 9 x 11 pixels, worth 200 points
+D 89AE 89B0 byte 3
+C 89AE width, height, points (also the shape number of the points picture)
+D 89B1 89D1 gfx2 3
+L 89D2 ITEM_31
+H 89D2
+| item shape 31: 7 x 11 pixels, worth 300 points
+D 89D2 89D4 byte 3
+C 89D2 width, height, points (also the shape number of the points picture)
+D 89D5 89EA gfx2 2
+L 89EB ITEM_32
+H 89EB
+| item shape 32: 11 x 11 pixels, worth 500 points
+D 89EB 89ED byte 3
+C 89EB width, height, points (also the shape number of the points picture)
+D 89EE 8A0E gfx2 3
+L 8A0F ITEM_33
+H 8A0F
+| item shape 33 - goblet (poisoned on station 5): 7 x 9 pixels, worth 200 points
+D 8A0F 8A11 byte 3
+C 8A0F width, height, points (also the shape number of the points picture)
+D 8A12 8A23 gfx2 2
+L 8A24 ITEM_34
+H 8A24
+| item shape 34 - TNT, 3 tons: 7 x 15 pixels, worth 300 points
+D 8A24 8A26 byte 3
+C 8A24 width, height, points (also the shape number of the points picture)
+D 8A27 8A44 gfx2 2
+L 8A45 ITEM_35
+H 8A45
+| item shape 35 - TNT, 2 tons: 7 x 7 pixels, worth 200 points
+D 8A45 8A47 byte 3
+C 8A45 width, height, points (also the shape number of the points picture)
+D 8A48 8A55 gfx2 2
+L 8A56 ITEM_36
+H 8A56
+| item shape 36 - TNT, 1 ton: 5 x 7 pixels, worth 100 points
+D 8A56 8A58 byte 3
+C 8A56 width, height, points (also the shape number of the points picture)
+D 8A59 8A66 gfx2 2
+L 8247 BOB_FRAME_LO
+H 8247
+| BOB_FRAME_LO / BOB_FRAME_HI - addresses of Bob's 13 animation frames.
+|  0 standing (same as 1)  1-3 walking right  4-6 walking left  7-8 climbing
+|  9-10 at the top of a ladder  11 jumping/sliding right  12 left
+D 8247 8253 byte 13
+L 8254 BOB_FRAME_HI
+D 8254 8260 byte 13
+L 8261 BOB_0
+H 8261
+| Bob frame 0 (standing): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8261 8292 gfx 1
+L 8294 BOB_2
+H 8294
+| Bob frame 2 (walk right 2): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8294 82C5 gfx 1
+L 82C7 BOB_3
+H 82C7
+| Bob frame 3 (walk right 3): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 82C7 82F8 gfx 1
+L 82FA BOB_4
+H 82FA
+| Bob frame 4 (walk left 1): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 82FA 832B gfx 1
+L 832D BOB_5
+H 832D
+| Bob frame 5 (walk left 2): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 832D 835E gfx 1
+L 8360 BOB_6
+H 8360
+| Bob frame 6 (walk left 3): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8360 8391 gfx 1
+L 8393 BOB_7
+H 8393
+| Bob frame 7 (climb 1): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8393 83C4 gfx 1
+L 83C6 BOB_8
+H 83C6
+| Bob frame 8 (climb 2): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 83C6 83F7 gfx 1
+L 83F9 BOB_9
+H 83F9
+| Bob frame 9 (ladder top 1): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 83F9 842A gfx 1
+L 842C BOB_10
+H 842C
+| Bob frame 10 (ladder top 2): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 842C 845D gfx 1
+L 8460 BOB_11
+H 8460
+| Bob frame 11 (jump right): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8460 8491 gfx 1
+L 8493 BOB_12
+H 8493
+| Bob frame 12 (jump left): player 0 (20 lines), player 1 (17), player 2 (17), drawn from the
+| last byte upwards; each layer's first line is the previous layer's last.
+D 8493 84C4 gfx 1
+L 8593 MUTANT_SHAPES
+H 8593
+| MUTANT_SHAPES - 10 shapes of 12 bytes (only 10 lines are copied), indexed by the
+| mutant's state: 0-1 facing right, 2-3 facing left, 4-7 the same when edible,
+| 8-9 eaten (the numbers "80" and "90", the points scored). The table really starts at $8591 (state 0 = $8591), so its first two
+| bytes are also the last word of MUTANT_LISTS, and its last two overlap the item list
+| of station 1.
+D 8593 859C gfx 1
+D 859D 85A8 gfx 1
+D 85A9 85B4 gfx 1
+D 85B5 85C0 gfx 1
+D 85C1 85CC gfx 1
+D 85CD 85D8 gfx 1
+D 85D9 85E4 gfx 1
+D 85E5 85F0 gfx 1
+D 85F1 85FC gfx 1
+D 85FD 8606 gfx 1
